@@ -1,3 +1,4 @@
 *.pyc
 virt/
 *.sql
+.DS_Store
