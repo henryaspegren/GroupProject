@@ -1,5 +1,17 @@
 # Group Project
 
+# Database Schema
+
+table: forum_messages
+contains: message_id (int, PK, NN), user_id (int), time_stamp (string), forum_name (string), post(string)
+
+table: topics
+contains: topic_id (int), topic (string), message_count (int)
+
+table: message_topics
+contains: topic_id (int, FOREIGN KEY, PK), message_id (int, FOREIGN KEY, PK)
+
+
 # Setup for Python portion
 1) install pip and virtualenv. Pip allows you to install python
 dependencies and virtualenv is a virtual environment manager that 
@@ -20,5 +32,7 @@ just run
 
 $ deactivate
 
+
+# NLP
 
 
