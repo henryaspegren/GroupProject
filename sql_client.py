@@ -11,7 +11,8 @@ Base = declarative_base()
 Represents a connection to a MYSQL database.
 """
 class MySQLSession:
-	def __init__(self, username, passowrd, host, port, database):
+	def __init__(self, username='root', passowrd='password', host='localhost', port=3306, 
+			database='kilo'):
 		self.username = username
 		self.passowrd = passowrd
 		self.host = host

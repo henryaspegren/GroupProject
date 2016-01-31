@@ -13,9 +13,10 @@ Class that abstracts away topic extraction
 """
 class TopicExtractor:
 
-	def __init__(self, tokenizer_model=TweetTokenizer(), ner_model=NER_CLASSIFIER):
+	def __init__(self, tokenizer_model=TweetTokenizer(), ner_model=NER_CLASSIFIER, 
+		nlp_root=NLP_ROOT):
 		self.tokenizer = tokenizer_model
-		self.ner_tagger = StanfordNERTagger(NLP_ROOT+'classifiers/'+ner_model, 
+		self.ner_tagger = StanfordNERTagger(nlp_root+'classifiers/'+ner_model, 
 			path_to_jar=(NLP_ROOT+'stanford-ner.jar'))
 
 	def extract_topics(self, message):
@@ -34,7 +35,6 @@ class TopicExtractor:
 Jobs and helper functions to process messages in db 
 and add in the extracted topics 
 """
-
 def process_message_to_db(session, message):
 	topic_extractor = TopicExtractor()
 	topics = topic_extractor.extract_topics(message)
