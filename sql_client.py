@@ -59,6 +59,9 @@ class ForumMessage(Base):
 	def get_post(self):
 		return self.post
 
+	def to_json(self):
+		return {'message_id':self.message_id, 'user_id':self.user_id, 'forum_name': self.forum_name, 'post':self.post}
+
 
 """
 ORM for the Topic database

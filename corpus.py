@@ -74,11 +74,21 @@ def load_frequency_dist(file='freq_dist.pkl'):
 	return fdist
 
 
-fdist1 = load_frequency_dist()
+# fdist1 = load_frequency_dist()
 # stop = stopwords.words('english')
 # words = fdist1.most_common(1000)
 # for (word, count) in words:
 # 	if word not in stop and len(word) > 8:
 # 		print "'%s' : '%i'" % (word, count)
 
-print fdist1.keys()
+
+# a = MySQLDBLazySequence()
+
+# iterator = a.iterate_from(0)
+
+# i = 0 
+# for message in iterator:
+# 	i += 1
+# 	if i > 20:
+# 		break
+# 	print message
