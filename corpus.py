@@ -1,7 +1,12 @@
 from nltk.data import LazyLoader
 from nltk.tokenize import TreebankWordTokenizer
 from nltk.util import AbstractLazySequence, LazyMap, LazyConcatenation
+from nltk.probability import FreqDist
+from nltk.corpus import stopwords
+
 from sql_client import MySQLSession, ForumMessage
+
+import pickle
 
 
 """
@@ -48,3 +53,32 @@ class MySQLDBCorpusReader(object):
 	def sents(self):
 		return LazyConcatenation(LazyMap(self._sent_tokenizer, self.text()))
 
+
+"""
+Generates a frequency dist from a corpus reader.
+Saves it as a python pickled object in the given file
+"""
+def generate_frequency_dist(corpus_reader=MySQLDBCorpusReader(), file='freq_dist.pkl'):
+	fdist = FreqDist(corpus_reader.words())
+	with open(file,'wb') as f:
+		pickle.dump(fdist, f)
+
+
+"""
+Loads a frequency distribution from a given pickle
+file
+"""
+def load_frequency_dist(file='freq_dist.pkl'):
+	with open('freq_dist.pkl', 'rb') as f:
+		fdist = pickle.load(f)
+	return fdist
+
+
+fdist1 = load_frequency_dist()
+# stop = stopwords.words('english')
+# words = fdist1.most_common(1000)
+# for (word, count) in words:
+# 	if word not in stop and len(word) > 8:
+# 		print "'%s' : '%i'" % (word, count)
+
+print fdist1.keys()
