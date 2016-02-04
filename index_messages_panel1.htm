@@ -1,0 +1,112 @@
+<html xmlns="http://www.w3.org/1999/xhtml"><head><!-- meta ignored -->
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+<script type="text/javascript">
+            $(document).ready(function () {
+                $("div").scroll(function () {
+                    var $this = $(this);
+                    var height = this.scrollHeight - $this.height(); // Get the height of the div
+                    var scroll = $this.scrollTop(); // Get the vertical scroll position
+
+                    var isScrolledToEnd = (scroll >= height);
+
+                    $(".scroll-pos").text(scroll);
+                    $(".scroll-height").text(height);
+
+                    if (isScrolledToEnd) {
+                        var additionalContent = GetMoreContent(); // Get the additional content
+						for(var i=0;i<5;i++){
+							
+							$this.append(additionalContent); // Append the additional content
+						}
+                    }
+                });
+            });
+
+            function GetMoreContent() {
+                return "<p>Message</p>";
+            }
+        </script>
+<style type="text/css">
+
+    body {
+      height: 80vh;
+      background-color: #2e2e2e;
+    }
+    
+    .grid {
+      display: flex;
+      height: 100%;
+    }
+    
+		.pane {
+		  flex: 1;
+		}
+		
+		#left {
+		  border-radius: 0.5em;
+		  
+		  border: 3px solid #424242;
+		  background-color: #6e6e6e;
+		  color: #e8e8e8;
+		  font-size: 1em;
+		  font-family: Verdana, sans-serif;
+		  overflow: scroll;
+		  
+		}
+		
+	</style>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+
+<link rel="stylesheet" type="text/css" href="skins/hermes/embed.css?s=1400683923">
+</head><body>
+  	<!-- node type 8 -->
+  	<div class="grid">
+      <div class="pane" id="left">
+		<head>Recent messages containing </head>
+			<script>
+				var topic;
+				var limit;
+				var linkToAPI = ...;
+				$.ajax({
+					url: linkToAPI,
+					data: {"topic":topic, "limit":limit}, 
+					type: "GET",
+					data: 
+				});
+				
+			</script>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+
+      </div>
+      <div class="pane" id="right">
+      </div>
+    </div>
+  
+</body></html>
