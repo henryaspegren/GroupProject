@@ -1,32 +1,10 @@
-<html xmlns="http://www.w3.org/1999/xhtml"><head><!-- meta ignored -->
+<html xmlns="http://www.w3.org/1999/xhtml">
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
-<script type="text/javascript">
-            $(document).ready(function () {
-                $("div").scroll(function () {
-                    var $this = $(this);
-                    var height = this.scrollHeight - $this.height(); // Get the height of the div
-                    var scroll = $this.scrollTop(); // Get the vertical scroll position
 
-                    var isScrolledToEnd = (scroll >= height);
+<head><!-- meta ignored -->
 
-                    $(".scroll-pos").text(scroll);
-                    $(".scroll-height").text(height);
-
-                    if (isScrolledToEnd) {
-                        var additionalContent = GetMoreContent(); // Get the additional content
-						for(var i=0;i<5;i++){
-							
-							$this.append(additionalContent); // Append the additional content
-						}
-                    }
-                });
-            });
-
-            function GetMoreContent() {
-                return "<p>Message</p>";
-            }
-        </script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+	
 <style type="text/css">
 
     body {
@@ -58,38 +36,16 @@
 	</style>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 
-<link rel="stylesheet" type="text/css" href="skins/hermes/embed.css?s=1400683923">
-</head><body>
+
+</head> <body>
   	<!-- node type 8 -->
   	<div class="grid">
       <div class="pane" id="left">
-		<head>Recent messages containing </head>
-			<script>
-				var topic;
-				var limit;
-				var linkToAPI = ...;
-				$.ajax({
-					url: linkToAPI,
-					data: {"topic":topic, "limit":limit}, 
-					type: "GET",
-					data: 
-				});
-				
-			</script>
-			<p>message</p>
-			<p>message</p>
-			<p>message</p>
-			<p>message</p>
-			<p>message</p>
-			<p>message</p>
-			<p>message</p>
-			<p>message</p>
-			<p>message</p>
-			<p>message</p>
-			<p>message</p>
-			<p>message</p>
-			<p>message</p>
-			<p>message</p>
+		<h3>Recent messages</h3>
+			<script src = "messages_panel.js"></script>
+			
+			
+			<p>message</p>					<!-- won't need these -->
 			<p>message</p>
 			<p>message</p>
 			<p>message</p>
