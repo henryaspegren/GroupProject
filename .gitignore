@@ -2,3 +2,4 @@
 virt/
 *.sql
 .DS_Store
+data/
