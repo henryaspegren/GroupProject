@@ -83,9 +83,12 @@ class Topic(Base):
 
 	def __repr__(self):
 		if self.topic_id is None:
-			return "<Topic(topic_id='NA', topic='%s')>" % (self.topic)
+			return "<Topic(topic_id='NA', topic='%s', message_count='%i')>" % (self.topic, self.message_count)
 		else:
-			return "<Topic(topic_id='%i', topic='%s')>" % (self.topic_id, self.topic)
+			return "<Topic(topic_id='%i', topic='%s', message_count='%i')>" % (self.topic_id, self.topic, self.message_count)
+
+	def to_json(self):
+		return {'topic': self.topic, 'topic_id' : self.topic_id, 'message_count': self.message_count}
 
 	def get_topic_id(self):
 		return self.topic_id

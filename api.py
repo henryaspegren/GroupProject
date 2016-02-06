@@ -1,6 +1,7 @@
 from flask import request, url_for
 from flask.ext.api import FlaskAPI, status, exceptions
 from sql_client import MySQLSession, ForumMessage, MessageTopic, Topic
+import operator, collections
 
 app = FlaskAPI(__name__)
 
@@ -8,15 +9,19 @@ app = FlaskAPI(__name__)
 DEFAULT_LIMIT = 10
 
 # To Ping API:
-# curl -H "Content-Type: applicati-d '{"limit": 10,"search_phrase":"Jagex"}' http://127.0.0.1:5000/search_phrase/
-
+# curl -H "Content-Type: application/json" -X POST -d '{"limit": 10, "topic": 
+# "Demons"}' http://127.0.0.1:5000/search_topic/
 
 database_connection = MySQLSession().get_session()
 
-
 """
-Simple API for looking up messages that contain a search phrase.
-TODO: adapt this to work with topics (shouldn't be hard)
+API for looking up messages that contain a search phrase
+
+Request: {'phrase' : <string to search form>
+			'limit' : <max number of messages to return> }
+Response: {'length' : <number of messages> 
+			'messages' : [<list of messages in json format>]}
+
 """
 @app.route("/search_phrase/", methods=['POST'])
 def search_phrase():
@@ -24,11 +29,11 @@ def search_phrase():
 		# todo: error message
 		pass
 	else: 
-	    phrase = str(request.data.get('search_phrase'))
+	    phrase = str(request.data.get('phrase'))
 	    limit = int(request.data.get('limit'))
 	    if limit is None:
 	    	limit = DEFAULT_LIMIT
-	    print "searching: '%s' with limit: '%i'" % (phrase, limit)
+	    print "searching for messages containing: '%s' with limit: '%i'" % (phrase, limit)
 	    messages = database_connection.query(ForumMessage).filter(ForumMessage.post.like('%'+phrase+'%')).limit(limit)
 	    number_of_messages = 0
 	    results = []
@@ -39,7 +44,12 @@ def search_phrase():
 
 
 """
-API for returning 
+API for returning messages that contain a given topic (topic id)
+
+Request: {'topic_id' : <topic_id>
+			'limit' : <max number of messages to return>}
+Response: {'length' : <number of messages> 
+			'messages' : [<list of messages in json format>]}
 
 """
 @app.route("/search_topic/", methods=['POST'])
@@ -48,14 +58,69 @@ def search_topic():
 		# todo: error message
 		pass
 	else:
-		topic = str(request.data.get('topic'))
+		topic_id = str(request.data.get('topic_id'))
 		limit = int(request.data.get('limit'))
 		if limit is None:
 			limit = DEFAULT_LIMIT
-		messages = database_connection.query(ForumMessage).filter(ForumMessage.post.like('%'+phrase+'%')).limit(limit)
-		for message in messages:
-			message_id = message.get_message_id()			
-	return {'test': 'hello'}, status.HTTP_200_OK
+		print "searching messages with topic_id: '%s' with limit: '%s'" % (topic, limit)		
+		# look up the message ids with that topic
+		message_ids = database_connection.query(MessageTopic).filter(MessageTopic.topic_id == topic_id).limit(limit)
+		if message_ids is None:
+			api_data = { 'length': 0, 'messages' : [] }
+		else:
+			# now get the messages themseleves
+			messages = []
+			for message_id in [x.get_message_id() for x in message_ids]:
+				# lookup the message
+				message = database_connection.query(ForumMessage).filter(
+					ForumMessage.message_id == message_id).one()
+				messages.append(message.to_json())
+			# return using the response format
+			api_data = {'length': len(messages), 'messages' : messages}
+		return api_data, status.HTTP_200_OK
+
+"""
+API for returning top topics in messages containing a search phrase
+
+TODO: pretty sure this isn't going to be scalable
+
+Request: {'search_phrase' : <message_topic> 
+			'limit' : <max number of messages to return> }
+Response: {'length' : <number of messages> 
+			'top_topics : [
+				{	topic : <topic_name>,
+					topic_id : <topic_id>
+					message_count : <number_of_messages_in_this_topic>
+				},
+				{	topic : <topic2_name>,
+					topic_id : <topic_id2>
+					message_count : <number_of_messages_in_this_topic>
+				}
+				]
+		    }
+"""
+@app.route("/top_topics_by_search_phrase/", methods=['POST'])
+def top_topics_by_search_phrase():
+	if request.method != 'POST':
+		# todo: error message
+		pass
+	else:
+		search_phrase = str(request.data.get('search_phrase'))
+		limit = int(request.data.get('limit'))
+		if limit is None:
+			limit = DEFAULT_LIMIT
+		print "top topics among messages containing: '%s' with limit: '%s'" % (search_phrase, limit)	
+
+		topics = database_connection.query(Topic).join(MessageTopic).join(ForumMessage).filter(ForumMessage.post.like('%'+search_phrase+'%')).order_by(Topic.message_count.desc()).limit(limit)
+
+		if topics is None:
+			api_data = {'length': 0, 'top_topics' : []}
+		else:
+			top_topics = []
+			for topic in topics:
+				top_topics.append(topic.to_json())
+			api_data = {'length': len(top_topics), 'top_topics' : top_topics}
+		return api_data, status.HTTP_200_OK
 
 
 if __name__ == "__main__":

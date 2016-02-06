@@ -41,5 +41,37 @@ $ deactivate
 divided into pre-processing, topic extraction and message processing modules. 
 
 # API
-Located in api.py. Uses JSON serialization and the format for requests and responses is specified in the google doc.
+Current iteration
+
+### API for looking up messages that contain a search phrase
+
+Request: {'phrase' : <string to search form>
+			'limit' : <max number of messages to return> }
+Response: {'length' : <number of messages> 
+			'messages' : [<list of messages in json format>]}
+
+
+### API for returning messages that contain a given topic (topic id)
+
+Request: {'topic_id' : <topic_id>
+			'limit' : <max number of messages to return>}
+Response: {'length' : <number of messages> 
+			'messages' : [<list of messages in json format>]}
+
+### API for returning top topics in messages containing a search phrase
+(NEED TO RECONSIDER THIS)
+Request: {'search_phrase' : <message_topic> 
+			'limit' : <max number of messages to return> }
+Response: {'length' : <number of messages> 
+			'top_topics : [
+				{	topic : <topic_name>,
+					topic_id : <topic_id>
+					message_count : <number_of_messages_in_this_topic>
+				},
+				{	topic : <topic2_name>,
+					topic_id : <topic_id2>
+					message_count : <number_of_messages_in_this_topic>
+				}
+				]
+		    }
 
