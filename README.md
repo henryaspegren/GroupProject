@@ -2,20 +2,51 @@
 
 # Database Schema
 
-table: forum_messages
-contains: message_id (int, PK, NN), user_id (int), time_stamp (string), forum_name (string), post (string), cleaned_post (string)
+## Table: forum_messages
+CREATE TABLE `forum_messages` (
+  `message_id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) DEFAULT NULL,
+  `time_stamp` text,
+  `forum_name` text,
+  `post` text,
+  `cleaned_post` text,
+  PRIMARY KEY (`message_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=100001 DEFAULT CHARSET=latin1;
 
-table: topics 
-contains: topic_id (int), topic (string), message_count (int)
 
-table: message_topics
-contains: topic_id (int, FOREIGN KEY, PK), message_id (int, FOREIGN KEY, PK)
+## Table: message_quotes 
+CREATE TABLE `message_quotes` (
+  `quote_id` varchar(45) NOT NULL,
+  `message_id` int(11) NOT NULL,
+  PRIMARY KEY (`message_id`,`quote_id`),
+  CONSTRAINT `message_id` FOREIGN KEY (`message_id`) REFERENCES `forum_messages` (`message_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-table: message_quotes
-contains: quote_id (string, PK, Unique), message_id (int FOREIGN KEY, PK)
+## Table: quotes
+CREATE TABLE `quotes` (
+  `quote_id` varchar(45) NOT NULL,
+  `quote_text` text NOT NULL,
+  PRIMARY KEY (`quote_id`),
+  UNIQUE KEY `quote_id_UNIQUE` (`quote_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-table: quotes
-contains: quote_id (string, PK, Unique), quote_text (string, NOT NULL)
+## Table: message_topics
+CREATE TABLE `message_topics` (
+  `message_id` int(11) NOT NULL,
+  `topic_id` int(11) NOT NULL,
+  PRIMARY KEY (`message_id`,`topic_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+## Table: topics
+CREATE TABLE `topics` (
+  `topic_id` int(11) NOT NULL AUTO_INCREMENT,
+  `topic` varchar(45) DEFAULT NULL,
+  `message_count` int(11) DEFAULT NULL,
+  PRIMARY KEY (`topic_id`),
+  UNIQUE KEY `topic_UNIQUE` (`topic`)
+) ENGINE=InnoDB AUTO_INCREMENT=82 DEFAULT CHARSET=latin1;
+
+
 
 # Setup for Python portion
 1) install pip and virtualenv. Pip allows you to install python
