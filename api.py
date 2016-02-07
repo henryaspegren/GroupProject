@@ -123,5 +123,19 @@ def top_topics_by_search_phrase():
 		return api_data, status.HTTP_200_OK
 
 
+@app.route("/top_topics/", methods=['POST'])
+def top_topics():
+	if request.method != 'POST':
+		pass
+	else:
+		limit = int(request.data.get('limit'))
+		if limit is None:
+			limit = DEFAULT_LIMIT
+		topics = database_connection.query(Topic).order_by(Topic.message_count.desc()).limit(limit)
+		top_topics = [{"name" : topic.get_topic(), "size" : topic.get_message_count()} for topic in topics]
+		api_data = {"name": "Top Topics", "children" : top_topics}
+		return api_data, status.HTTP_200_OK
+
+
 if __name__ == "__main__":
     app.run(debug=True)

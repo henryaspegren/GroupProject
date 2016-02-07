@@ -146,7 +146,9 @@ class PreProcessing(object):
 		else:
 			# just use the original post
 			message.set_cleaned_post(message.get_post())
+
 		print "cleaned message is: \n '%s' \n" % message.get_cleaned_post()
+		
 		db_session.commit()
 
 
