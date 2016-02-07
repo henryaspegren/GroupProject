@@ -156,3 +156,32 @@ class MessageQuote(Base):
 
 	def get_message_id(self):
 		return self.message_id
+
+
+"""
+ORM for the User database
+"""
+class User(Base):
+	__tablename__ = 'users'
+	user_id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
+	user = Column(String)
+	user_count = Column(Integer)
+
+	def __repr__(self):
+		if self.user_id is None:
+			return "<User(user_id='NA', user='%s')>" % (self.user)
+		else:
+			return "<User(user_id='%i', user='%s')>" % (self.user_id, self.user)
+
+	def get_user_id(self):
+		return self.user_id
+
+	def get_user(self):
+		return self.user
+
+	def get_user_count(self):
+		return self.user_count
+
+	def increment_user_count(self):
+		self.user_count += 1
+

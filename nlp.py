@@ -1,12 +1,13 @@
 import os, re
 from nltk.tag.stanford import StanfordNERTagger
-from sql_client import MySQLSession, ForumMessage, MessageTopic, Topic, MessageQuote, Quote 
+from sql_client import MySQLSession, ForumMessage, MessageTopic, Topic, MessageQuote, Quote, User
 from nltk.tokenize import TweetTokenizer
 
 NLP_ROOT = os.getcwd()+'/stanford-ner/'
 # alternative: english.all.3class.distsim.crf.ser.gz
 NER_CLASSIFIER = 'english.conll.4class.distsim.crf.ser.gz'
 
+database_connection = MySQLSession().get_session()
 
 """
 Class that abstracts away topic extraction
@@ -30,6 +31,14 @@ class TopicExtractor(object):
 				named_entities.add(token)
 		return named_entities
 
+	def extract_user_mentions(self, message):
+		message_text = message.get_post()
+		tokens = self.tokenizer.tokenize(message_text)
+		user_mentions = set()
+		for token in tokens:
+			if token[0] == '@':
+				user_mentions.add(token)
+		return user_mentions
 """
 Class for message processing
 """
@@ -40,13 +49,13 @@ class Processing(object):
 		self.topic_extractor
 
 	"""
-	Processes a forum message by extracting topics from the message and 
-	storing the message topic(s) in the message_topics table and storing the 
+	Processes a forum message by extracting topics from the message and
+	storing the message topic(s) in the message_topics table and storing the
 	topic(s) in the topics table (as well as incrementing the message count)
 	"""
-	# note that there can be problems if the session we are using 
+	# note that there can be problems if the session we are using
 	# is not consistent with the session connected to the message
-	# object passed in. 
+	# object passed in.
 	def extract_message_topic_to_db(self, message, db_session=None):
 		# defaults to stored session
 		if db_session is None:
@@ -68,8 +77,8 @@ class Processing(object):
 			# existing topic entry
 			else:
 				topic_id = topic_row.get_topic_id()
-				topic_row.increment_message_count() 
-			# Now we have to put corresponding entry in the 
+				topic_row.increment_message_count()
+			# Now we have to put corresponding entry in the
 			# message_topics table
 			message_topic = db_session.query(MessageTopic).filter((MessageTopic.topic_id == topic_id) and (MessageTopic.message_id == message_id)).first()
 			# if no entry put one in
@@ -88,14 +97,13 @@ class Processing(object):
 		for msg in message_iterator:
 			extract_message_topic_to_db(msg)
 
-
 """
 Class for preprocessing and cleaning the message data
 """
 class PreProcessing(object):
 
 	# regex for quotes
-	# NOTE that this always grabs the outermost quote. So nested quotes will 
+	# NOTE that this always grabs the outermost quote. So nested quotes will
 	# be treated text in the outermost quote
 	quote_regex_expr = r'(\[quote id=(?P<quote_id>([0-9-])+)\](?P<text>[\W\w]+)\[/quote\])+'
 	quote_regex = re.compile(quote_regex_expr, re.IGNORECASE)
@@ -104,9 +112,9 @@ class PreProcessing(object):
 	def __init__(self, session=MySQLSession().get_session()):
 		self.session = session
 
-	# note that there can be problems if the session we are using 
+	# note that there can be problems if the session we are using
 	# is not consistent with the session connected to the message
-	# object passed in. 
+	# object passed in.
 	def remove_quotes_from_message_to_db(self, message, db_session=None):
 		message_text = message.get_post()
 		results = re.search(self.quote_regex, message_text)
@@ -119,7 +127,7 @@ class PreProcessing(object):
 
 		if results is not None:
 			results_dictionary = results.groupdict()
-			# extract fields 
+			# extract fields
 			quote_id = results_dictionary['quote_id']
 			quote_text = results_dictionary['text']
 			# clean the message by replacing the quote with the empty string
@@ -130,7 +138,7 @@ class PreProcessing(object):
 			message_quote = db_session.query(MessageQuote).filter((MessageQuote.quote_id == quote_id) and (MessageQuote.message_id == message_id)).first()
 
 			if message_quote is None:
-				# add the message quote to the db 
+				# add the message quote to the db
 				message_quote = MessageQuote(quote_id=quote_id, message_id=message.get_message_id())
 				db_session.add(message_quote)
 			quote = db_session.query(Quote).filter(Quote.quote_id == quote_id).first()
@@ -140,7 +148,7 @@ class PreProcessing(object):
 				quote = Quote(quote_id=quote_id, quote_text=quote_text)
 				db_session.add(quote)
 			# else just update existing entry
-			else: 
+			else:
 				quote.set_quote_text(quote_text)
 
 		else:
@@ -152,10 +160,40 @@ class PreProcessing(object):
 		db_session.commit()
 
 
+	def extract_user_mentions_to_db(self, session, message):
+		topic_extractor = TopicExtractor()
+		user_mentions = topic_extractor.extract_user_mentions()
+		message_id = message.get_message_id()
 
+		for mentioned_user in user_mentions:
+			user_row = session.query(User).filter(User.user == mentioned_user)
+			user_id = None
 
+			if user_row is None:
+				new_user = User(user = mentioned_user, user_count = 1)
+				print 'Add new user'
+				session.add(new_user)
+				session.commit()
+				print new_user
+				user_id = new_user.get_user_id()
+			else:
+				user_id = user_row.get_user_id()
+				user_row.increment_user_count()
 
+		# remove the user mentions from the original message and store the clean message in the database
 
+		#clean_message = session.query(ForumMessage).
+		#session.query(ForumMessage).filter(ForumMessage.message_id = message_id).set_clean_message(clean_message);
+
+	def run_user_mentions_extraction(self, session, message_iterator):
+		if message_iterator is None:
+			message_iterator = self.session.query(ForumMessage).order_by(ForumMessage.message_id)
+		for msg in message_iterator:
+			extract_user_mentions_to_db(msg)
+
+#class Main(object):
+#	processing = PreProcessing()
+#	processing.run_user_mentions_extraction(session=MySQLSession(host='abc', port=3307).get_session(), message_iterator=None)
 
 
 
