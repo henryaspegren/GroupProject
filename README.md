@@ -57,6 +57,8 @@ makes synchronizing across platforms easy.
  python project can live
 
 $ virtualenv virt
+
+
 $ source virt/bin/activate
 
 3) now install all the required dependencies (foolproof!)
@@ -78,6 +80,8 @@ Current iteration
 
 Request: {'phrase' : <string to search form>
 			'limit' : <max number of messages to return> }
+
+
 Response: {'length' : <number of messages> 
 			'messages' : [<list of messages in json format>]}
 
@@ -86,6 +90,8 @@ Response: {'length' : <number of messages>
 
 Request: {'topic_id' : <topic_id>
 			'limit' : <max number of messages to return>}
+
+
 Response: {'length' : <number of messages> 
 			'messages' : [<list of messages in json format>]}
 
@@ -93,6 +99,8 @@ Response: {'length' : <number of messages>
 (NEED TO RECONSIDER THIS)
 Request: {'search_phrase' : <message_topic> 
 			'limit' : <max number of messages to return> }
+
+
 Response: {'length' : <number of messages> 
 			'top_topics : [
 				{	topic : <topic_name>,
@@ -104,5 +112,16 @@ Response: {'length' : <number of messages>
 					message_count : <number_of_messages_in_this_topic>
 				}
 				]
-		    }
+		  }
+
+### API for returning top topics overall (by message count)
+Request: {"limit" : <max number of topics to return> }
+
+
+Response: {"name" : "Top Topics", 
+      "children" : [
+        { "name" : <topic>,  "size" : <num messages> },
+        { "name" : <topic2>, "size" : <num messages> }
+      ]
+    }
 

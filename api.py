@@ -123,6 +123,18 @@ def top_topics_by_search_phrase():
 		return api_data, status.HTTP_200_OK
 
 
+"""
+API for returning the top topics by number of messages. Later we can 
+group these hierarchically 
+
+Request: {"limit" : <max number of topics to return> }
+Response: {"name" : "Top Topics", 
+			"children" : [
+				{ "name" : <topic>,  "size" : <num messages> },
+				{ "name" : <topic2>, "size" : <num messages> }
+			]
+		}
+"""
 @app.route("/top_topics/", methods=['POST'])
 def top_topics():
 	if request.method != 'POST':
