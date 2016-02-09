@@ -73,6 +73,14 @@ $ source virt/bin/activate
 
 $ pip install -r requirements.txt
 
+3.5)
+
+The dependency pyner must be installed manually from inside the virtual environment. Download [pyner](https://github.com/dat/pyner) as a zip and then run 
+
+$ python setup.py install
+
+from inside the directory of the source files
+
 4) when you want to leave the virtualenvironment 
 just run 
 
@@ -80,6 +88,15 @@ $ deactivate
 
 # NLP
 divided into pre-processing, topic extraction and message processing modules. 
+
+### Running Stanford NER as a standalone java module 
+$   java -mx1000m -cp stanford-ner.jar edu.stanford.nlp.ie.NERServer     -loadClassifier classifiers/english.muc.7class.distsim.crf.ser.gz     -port 8070 -outputFormat inlineXML
+
+
+When this server is running, make sure the socket is pointed to the correct hostname and port. Pass this into the extract_topic method in nlp.py
+
+In order to do this you need to have a copy of the [stanford nlp distribution](http://stanfordnlp.github.io/CoreNLP/) as well as [pyner](https://github.com/dat/pyner) installed
+
 
 # API
 Current iteration

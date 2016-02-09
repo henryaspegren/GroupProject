@@ -1,18 +1,21 @@
-import os, re, nltk, time, sys
+import os, re, nltk, time, sys, ner
 from nltk.tag.stanford import StanfordNERTagger
 from nltk import word_tokenize
 from sql_client import MySQLSession, ForumMessage, MessageTopic, Topic, MessageQuote, Quote, User
 from nltk.tokenize import TweetTokenizer
 
-
+# Root for the NLP classifier
 NLP_ROOT = os.getcwd()+'/stanford-ner/'
-# alternative: english.all.3class.distsim.crf.ser.gz
+
+# NLP classifier to use
 NER_CLASSIFIER = 'english.conll.4class.distsim.crf.ser.gz'
+# alternative: english.all.3class.distsim.crf.ser.gz
 
 # set to true to get a verbose output
 DEBUG = False
 
-database_connection = MySQLSession().get_session()
+# give an update per <UPDATE_MOD> messages processed
+UPDATE_MOD = 100
 
 """
 Class that abstracts away topic extraction
@@ -25,15 +28,15 @@ class TopicExtractor(object):
 		self.ner_tagger = StanfordNERTagger(nlp_root+'classifiers/'+ner_model, 
 			path_to_jar=(NLP_ROOT+'stanford-ner.jar'))
 
-	def extract_topics(self, message):
-		message_text = message.get_post()
-		tokens = self.tokenizer.tokenize(message_text)
-		res = self.ner_tagger.tag(tokens)
+	# this method now uses a java ner server to process requests which is much faster
+	# than calling java from python
+	def extract_topics(self, message, socket_to_tagger=ner.SocketNER(host='localhost', port=8070)):
+		message_text = message.get_cleaned_post()
+		res = socket_to_tagger.get_entities(message_text)
 		named_entities = set()
-		for (token, tag) in res:
-			# O corresponds to no named entity
-			if tag != 'O':
-				named_entities.add(token)
+		for (category, topics) in res.iteritems():
+			for topic in topics:
+				named_entities.add(topic)
 		return named_entities
 
 	def extract_user_mentions(self, message):
@@ -75,11 +78,11 @@ class Processing(object):
 			# new topic
 			if topic_row is None:
 				new_topic = Topic(topic=topic_str, message_count=1)
-				if DEBUG: 
-					print 'Adding new topic'
 				db_session.add(new_topic)
 				db_session.commit()
-				print new_topic
+				if DEBUG: 
+					print 'Adding new topic'
+					print new_topic
 				topic_id = new_topic.get_topic_id()
 			# existing topic entry
 			else:
@@ -97,22 +100,23 @@ class Processing(object):
 	"""
 	Runs the message topic extraction on a database iterator
 	"""
-	def run_topic_extraction(self, message_iterator=None):
+	def run_topic_extraction(self, message_iterator=None, number_processed=0, total=100000, start_time=time.time()):
 		if message_iterator is None:
 			message_iterator = self.session.query(ForumMessage).order_by(ForumMessage.message_id)
-		
-		start_time = time.time()
-		total = message_iterator.count()
-		number_processed = 0
 
 		for msg in message_iterator:
-			self.extract_message_topic_to_db(msg)
+			try:
+				self.extract_message_topic_to_db(msg)
+				number_processed += 1
+				# simple log to see how much progress we has been made
+				if ((number_processed % UPDATE_MOD) == 0):
+					elapsed_time = (time.time()-start_time)
+					print "Processed : %i of %i in %s" % (number_processed, total, str(elapsed_time))
+			except Exception as e: 
+				print "Exception message ", str(e)
+				# rollback session
+				self.session.rollback()
 
-			number_processed += 1
-			# simple log to see how much progress we has been made
-			if (number_processed % 1000 == 0):
-				elapsed_time = (time.time()-start_time)
-				print "Processed : %i of %i in %s" % (number_processed, total, str(elapsed_time))
 
 """
 Class for preprocessing and cleaning the message data
@@ -169,26 +173,19 @@ class PreProcessing(object):
 
 	# run quote extraction over a set of messages
 	# if none is specified, then quote extraction will be run on the entire database
-	def run_quotes_extraction(self, message_iterator=None):
+	def run_quotes_extraction(self, message_iterator=None, number_processed=0, total=100000, start_time=time.time()):
 		if message_iterator is None:
 			message_iterator = self.session.query(ForumMessage).order_by(ForumMessage.message_id)
-		
-		start_time = time.time()
-		total = message_iterator.count()
-		number_processed = 0
-
 		for msg in message_iterator:
 			try:
 				self.remove_quotes_from_message_to_db(msg)
-
 				number_processed += 1
 				# simple log to see how much progress we has been made
-				if (number_processed % 1000 == 0):
+				if ((number_processed % UPDATE_MOD) == 0):
 					elapsed_time = (time.time()-start_time)
 					print "Processed : %i of %i in %s" % (number_processed, total, str(elapsed_time))
 			except Exception as e: 
-				print "Unexpected error on message: ", str(msg)
-				print "Exception message", str(e)
+				print "Exception message ", str(e)
 
 	def extract_user_mentions_to_db(self, message):
 
@@ -241,22 +238,37 @@ class Main(object):
 		mention_extraction : %s 
 		topic_extraction   : %s\n""" % (str(quote_extraction), str(mention_extraction), str(topic_extraction)) 
 
-		# database_connection = MySQLSession(username='cstkilo', password='Kilo_Jagex', host='localhost', port=3307,
-		# database='cstkilo')
+		# remote version
+		# database_session = MySQLSession(username='cstkilo', password='Kilo_Jagex', host='localhost', port=3307,
+		# 	database='cstkilo').get_session()
 
-		database_connection = MySQLSession()
+		# local version
+		database_session = MySQLSession().get_session()
 
-		pre_processing = PreProcessing(session=database_connection.get_session())
-		processing = Processing(session=database_connection.get_session())
+		pre_processing = PreProcessing(session=database_session)
+		processing = Processing(session=database_session)
 
 		if quote_extraction:
 			print "___________________________________________________\n"
 			print "           Starting Quote Extraction               \n"
 			print "___________________________________________________\n"
-			pre_processing.run_quotes_extraction()
+
+			# Split it into batches of 1000
+			total = database_session.query(ForumMessage).count()
+			number_processed = 0
+			batch_size = 1000
+			start_time = time.time()
+			# process the batches one at a time
+			while number_processed < total:
+				pre_processing.run_quotes_extraction(database_session.query(ForumMessage)
+					.order_by(ForumMessage.message_id).limit(batch_size).offset(number_processed),
+					number_processed=number_processed, total=total, start_time=start_time)
+				number_processed += batch_size
+
 			print "___________________________________________________\n"
 			print "           Starting Quote Extraction               \n"
 			print "___________________________________________________\n"
+
 		if mention_extraction:
 			print "___________________________________________________\n"
 			print "        Starting User Mention Extraction           \n"
@@ -270,18 +282,27 @@ class Main(object):
 			print "___________________________________________________\n"
 			print "           Starting Topic Extraction               \n"
 			print "___________________________________________________\n"
-			processing.run_topic_extraction()
+
+			# Split it into batches of 1000
+			total = database_session.query(ForumMessage).count()
+			number_processed = 0
+			batch_size = 1000
+			start_time = time.time()
+			# process the batches one at a time
+			while number_processed < total:
+				processing.run_topic_extraction(database_session.query(ForumMessage)
+					.order_by(ForumMessage.message_id).limit(batch_size).offset(number_processed),
+					number_processed=number_processed, total=total, start_time=start_time)
+				number_processed += batch_size
+
 			print "___________________________________________________\n"
 			print "           Finished Topic Extraction               \n"
 			print "___________________________________________________\n"
 
 
-
-
-
 # run the main program
 if __name__ == '__main__':
-    Main().run(quote_extraction=True)
+	Main().run(quote_extraction=False, topic_extraction=True)
 
 
 
