@@ -46,6 +46,14 @@ CREATE TABLE `topics` (
   UNIQUE KEY `topic_UNIQUE` (`topic`)
 ) ENGINE=InnoDB AUTO_INCREMENT=82 DEFAULT CHARSET=latin1;
 
+## Table: users
+CREATE TABLE `users` (
+  `user_id` int(11) NOT NULL AUTO_INCREMENT,
+  `user` varchar(45) DEFAULT NULL,
+  `user_count` int(11) DEFAULT NULL,
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `user_UNIQUE` (`user`)
+) ENGINE=InnoDB AUTO_INCREMENT=82 DEFAULT CHARSET=latin1;
 
 
 # Setup for Python portion
