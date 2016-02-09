@@ -47,7 +47,7 @@ class Processing(object):
 
 	def __init__(self, session=MySQLSession().get_session(), topic_extractor=TopicExtractor()):
 		self.session = session
-		self.topic_extractor
+		self.topic_extractor = topic_extractor
 
 	"""
 	Processes a forum message by extracting topics from the message and
@@ -96,7 +96,7 @@ class Processing(object):
 		if message_iterator is None:
 			message_iterator = self.session.query(ForumMessage).order_by(ForumMessage.message_id)
 		for msg in message_iterator:
-			extract_message_topic_to_db(msg)
+			self.extract_message_topic_to_db(msg)
 
 """
 Class for preprocessing and cleaning the message data
@@ -161,6 +161,14 @@ class PreProcessing(object):
 		
 		db_session.commit()
 
+	# run quote extraction over a set of messages
+	# if none is specified, then quote extraction will be run on the entire database
+	def run_quotes_extraction(self, message_iterator=None):
+		if message_iterator is None:
+			message_iterator = self.session.query(ForumMessage).order_by(ForumMessage.message_id)
+		for msg in message_iterator:
+			self.remove_quotes_from_message_to_db(msg)
+
 
 	def extract_user_mentions_to_db(self, message):
 		topic_extractor = TopicExtractor()
@@ -199,14 +207,39 @@ class PreProcessing(object):
 		for msg in message_iterator:
 			self.extract_user_mentions_to_db(msg)
 
+
 class Main(object):
-	processing = PreProcessing(session = MySQLSession(host='localhost', port=3307).get_session())
-	processing.run_user_mentions_extraction(message_iterator=None)
+
+
+	def run(self, quote_extraction=False, mention_extraction=False, topic_extraction=False):
+
+		print """Performing preprocessing and nlp with 
+		quote_extraction   : %s
+		mention_extraction : %s 
+		topic_extraction   : %s\n""" % (str(quote_extraction), str(mention_extraction), str(topic_extraction)) 
+
+		database_connection = MySQLSession(username='cstkilo', passowrd='Kilo_Jagex', host='localhost', port=3307,
+		database='cstkilo')
+
+		pre_processing = PreProcessing(session=database_connection.get_session())
+		processing = Processing(session=database_connection.get_session())
+
+		if quote_extraction:
+			pre_processing.run_quotes_extraction()
+
+		if mention_extraction:
+			pre_processing.run_user_mentions_extraction()
+
+		if topic_extraction:
+			processing.run_topic_extraction()
 
 
 
 
 
+# run the main program
+if __name__ == '__main__':
+    Main().run()
 
 
 
