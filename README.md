@@ -86,6 +86,8 @@ Current iteration
 
 ### API for looking up messages that contain a search phrase
 
+Endpoint: /search_phrase/
+
 Request: {'phrase' : <string to search form>
 			'limit' : <max number of messages to return> }
 
@@ -96,6 +98,8 @@ Response: {'length' : <number of messages>
 
 ### API for returning messages that contain a given topic (topic id)
 
+Endpoint: /search_topic/
+
 Request: {'topic_id' : <topic_id>
 			'limit' : <max number of messages to return>}
 
@@ -104,7 +108,9 @@ Response: {'length' : <number of messages>
 			'messages' : [<list of messages in json format>]}
 
 ### API for returning top topics in messages containing a search phrase
-(NEED TO RECONSIDER THIS)
+
+Endpoint: /top_topics_by_search_phrase/
+
 Request: {'search_phrase' : <message_topic> 
 			'limit' : <max number of messages to return> }
 
@@ -123,6 +129,9 @@ Response: {'length' : <number of messages>
 		  }
 
 ### API for returning top topics overall (by message count)
+
+Endpoint: /top_topics/
+
 Request: {"limit" : <max number of topics to return> }
 
 

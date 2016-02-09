@@ -5,8 +5,7 @@ from sql_client import MySQLSession, ForumMessage, MessageTopic, Topic, MessageQ
 from nltk.tokenize import TweetTokenizer
 
 NLP_ROOT = os.getcwd()+'/stanford-ner/'
-# alternativ
-# e: english.all.3class.distsim.crf.ser.gz
+# alternative: english.all.3class.distsim.crf.ser.gz
 NER_CLASSIFIER = 'english.conll.4class.distsim.crf.ser.gz'
 
 database_connection = MySQLSession().get_session()
@@ -190,7 +189,6 @@ class PreProcessing(object):
 
 		# set the cleaned message text
 		message.set_cleaned_post(cleaned_message_text)
-
 
 		#clean_message = session.query(ForumMessage).
 		#session.query(ForumMessage).filter(ForumMessage.message_id = message_id).set_clean_message(clean_message);
