@@ -1,10 +1,12 @@
-import os, re
+import os, re, nltk
 from nltk.tag.stanford import StanfordNERTagger
+from nltk import word_tokenize
 from sql_client import MySQLSession, ForumMessage, MessageTopic, Topic, MessageQuote, Quote, User
 from nltk.tokenize import TweetTokenizer
 
 NLP_ROOT = os.getcwd()+'/stanford-ner/'
-# alternative: english.all.3class.distsim.crf.ser.gz
+# alternativ
+# e: english.all.3class.distsim.crf.ser.gz
 NER_CLASSIFIER = 'english.conll.4class.distsim.crf.ser.gz'
 
 database_connection = MySQLSession().get_session()
@@ -107,7 +109,8 @@ class PreProcessing(object):
 	# be treated text in the outermost quote
 	quote_regex_expr = r'(\[quote id=(?P<quote_id>([0-9-])+)\](?P<text>[\W\w]+)\[/quote\])+'
 	quote_regex = re.compile(quote_regex_expr, re.IGNORECASE)
-
+	users_regex_expr = r'@([a-\z][A-\Z][0-9])+'
+	users_regex = re.compile(users_regex_expr)
 
 	def __init__(self, session=MySQLSession().get_session()):
 		self.session = session
@@ -160,20 +163,22 @@ class PreProcessing(object):
 		db_session.commit()
 
 
-	def extract_user_mentions_to_db(self, session, message):
+	def extract_user_mentions_to_db(self, message):
 		topic_extractor = TopicExtractor()
-		user_mentions = topic_extractor.extract_user_mentions()
+		message_text = message.get_post()
+		tokens = topic_extractor.tokenizer.tokenize(message_text)
+		user_mentions = topic_extractor.extract_user_mentions(message)
 		message_id = message.get_message_id()
 
 		for mentioned_user in user_mentions:
-			user_row = session.query(User).filter(User.user == mentioned_user)
+			user_row = self.session.query(User).filter(User.user == mentioned_user).first()
 			user_id = None
 
 			if user_row is None:
 				new_user = User(user = mentioned_user, user_count = 1)
 				print 'Add new user'
-				session.add(new_user)
-				session.commit()
+				self.session.add(new_user)
+				self.session.commit()
 				print new_user
 				user_id = new_user.get_user_id()
 			else:
@@ -181,19 +186,24 @@ class PreProcessing(object):
 				user_row.increment_user_count()
 
 		# remove the user mentions from the original message and store the clean message in the database
+		cleaned_message_text = re.sub(self.quote_regex, '', message_text)
+
+		# set the cleaned message text
+		message.set_cleaned_post(cleaned_message_text)
+
 
 		#clean_message = session.query(ForumMessage).
 		#session.query(ForumMessage).filter(ForumMessage.message_id = message_id).set_clean_message(clean_message);
 
-	def run_user_mentions_extraction(self, session, message_iterator):
+	def run_user_mentions_extraction(self, message_iterator):
 		if message_iterator is None:
 			message_iterator = self.session.query(ForumMessage).order_by(ForumMessage.message_id)
 		for msg in message_iterator:
-			extract_user_mentions_to_db(msg)
+			self.extract_user_mentions_to_db(msg)
 
-#class Main(object):
-#	processing = PreProcessing()
-#	processing.run_user_mentions_extraction(session=MySQLSession(host='abc', port=3307).get_session(), message_iterator=None)
+class Main(object):
+	processing = PreProcessing(session = MySQLSession(host='localhost', port=3307).get_session())
+	processing.run_user_mentions_extraction(message_iterator=None)
 
 
 
