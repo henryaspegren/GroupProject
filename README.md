@@ -90,7 +90,7 @@ $ deactivate
 divided into pre-processing, topic extraction and message processing modules. 
 
 ### Running Stanford NER as a standalone java module 
-$   java -mx1000m -cp stanford-ner.jar edu.stanford.nlp.ie.NERServer     -loadClassifier classifiers/english.muc.7class.distsim.crf.ser.gz     -port 8070 -outputFormat inlineXML
+$   java -mx1000m -cp stanford-ner/stanford-ner.jar edu.stanford.nlp.ie.NERServer     -loadClassifier stanford-ner/classifiers/english.muc.7class.distsim.crf.ser.gz  -port 8070 -outputFormat inlineXML
 
 
 When this server is running, make sure the socket is pointed to the correct hostname and port. Pass this into the extract_topic method in nlp.py
