@@ -11,16 +11,16 @@ Base = declarative_base()
 Represents a connection to a MYSQL database.
 """
 class MySQLSession(object):
-	def __init__(self, username='root', passowrd='password', host='localhost', port=3306,
+	def __init__(self, username='root', password='password', host='localhost', port=3306,
 			database='kilo'):
 		self.username = username
-		self.passowrd = passowrd
+		self.password = password
 		self.host = host
 		self.port = port
 		self.database = database
 
 		# format: dialect+driver://username:password@host:port/database
-		self.engine = create_engine('mysql+pymysql://'+self.username+":"+self.passowrd \
+		self.engine = create_engine('mysql+pymysql://'+self.username+":"+self.password \
 			+"@"+self.host+":"+str(self.port)+"/"+self.database)
 
 	def get_engine(self):
