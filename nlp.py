@@ -1,4 +1,4 @@
-import os, re, nltk, time
+import os, re, nltk, time, sys
 from nltk.tag.stanford import StanfordNERTagger
 from nltk import word_tokenize
 from sql_client import MySQLSession, ForumMessage, MessageTopic, Topic, MessageQuote, Quote, User
@@ -9,6 +9,7 @@ NLP_ROOT = os.getcwd()+'/stanford-ner/'
 # alternative: english.all.3class.distsim.crf.ser.gz
 NER_CLASSIFIER = 'english.conll.4class.distsim.crf.ser.gz'
 
+# set to true to get a verbose output
 DEBUG = False
 
 database_connection = MySQLSession().get_session()
@@ -43,6 +44,7 @@ class TopicExtractor(object):
 			if token[0] == '@':
 				user_mentions.add(token)
 		return user_mentions
+		
 """
 Class for message processing
 """
@@ -85,16 +87,13 @@ class Processing(object):
 				topic_row.increment_message_count()
 			# Now we have to put corresponding entry in the
 			# message_topics table
-			message_topic = db_session.query(MessageTopic).filter((MessageTopic.topic_id == topic_id) and (MessageTopic.message_id == message_id)).first()
-			# if no entry put one in
-			if message_topic is None:
-				if DEBUG:
-					print 'Adding new message_topic'
-				new_message_topic = MessageTopic(topic_id=topic_id, message_id=message_id)
-				db_session.add(new_message_topic)
-				db_session.commit()
-				if DEBUG:
-					print new_message_topic
+			new_message_topic = MessageTopic(topic_id=topic_id, message_id=message_id)
+			# merge creates it or updates it if it already exists
+			db_session.merge(new_message_topic)
+			db_session.commit()
+
+			if DEBUG:
+				print 'Adding new message_topic : ', new_message_topic
 	"""
 	Runs the message topic extraction on a database iterator
 	"""
@@ -142,9 +141,6 @@ class PreProcessing(object):
 		if db_session is None:
 			db_session = self.session
 
-		if DEBUG:
-			print "original message is: \n '%s' \n" % message_text
-
 		if results is not None:
 			results_dictionary = results.groupdict()
 			# extract fields
@@ -155,27 +151,18 @@ class PreProcessing(object):
 			# set the cleaned message text
 			message.set_cleaned_post(cleaned_message_text)
 			# first tie the message to the quote
-			message_quote = db_session.query(MessageQuote).filter((MessageQuote.quote_id == quote_id) and (MessageQuote.message_id == message_id)).first()
-
-			if message_quote is None:
-				# add the message quote to the db
-				message_quote = MessageQuote(quote_id=quote_id, message_id=message.get_message_id())
-				db_session.add(message_quote)
-			quote = db_session.query(Quote).filter(Quote.quote_id == quote_id).first()
+			message_quote = MessageQuote(quote_id=quote_id, message_id=message.get_message_id())
+			db_session.merge(message_quote)
 			# then add the quote
-
-			if quote is None:
-				quote = Quote(quote_id=quote_id, quote_text=quote_text)
-				db_session.add(quote)
-			# else just update existing entry
-			else:
-				quote.set_quote_text(quote_text)
-
+			quote = Quote(quote_id=quote_id, quote_text=quote_text)
+			db_session.merge(quote)
 		else:
 			# just use the original post
 			message.set_cleaned_post(message.get_post())
 
+		# helpful debugger output
 		if DEBUG:
+			print "original message is: \n '%s' \n" % message_text
 			print "cleaned message is: \n '%s' \n" % message.get_cleaned_post()
 		
 		db_session.commit()
@@ -191,14 +178,17 @@ class PreProcessing(object):
 		number_processed = 0
 
 		for msg in message_iterator:
-			self.remove_quotes_from_message_to_db(msg)
+			try:
+				self.remove_quotes_from_message_to_db(msg)
 
-			number_processed += 1
-			# simple log to see how much progress we has been made
-			if (number_processed % 1000 == 0):
-				elapsed_time = (time.time()-start_time)
-				print "Processed : %i of %i in %s" % (number_processed, total, str(elapsed_time))
-
+				number_processed += 1
+				# simple log to see how much progress we has been made
+				if (number_processed % 1000 == 0):
+					elapsed_time = (time.time()-start_time)
+					print "Processed : %i of %i in %s" % (number_processed, total, str(elapsed_time))
+			except Exception as e: 
+				print "Unexpected error on message: ", str(msg)
+				print "Exception message", str(e)
 
 	def extract_user_mentions_to_db(self, message):
 
@@ -251,8 +241,10 @@ class Main(object):
 		mention_extraction : %s 
 		topic_extraction   : %s\n""" % (str(quote_extraction), str(mention_extraction), str(topic_extraction)) 
 
-		database_connection = MySQLSession(username='cstkilo', password='Kilo_Jagex', host='localhost', port=3307,
-		database='cstkilo')
+		# database_connection = MySQLSession(username='cstkilo', password='Kilo_Jagex', host='localhost', port=3307,
+		# database='cstkilo')
+
+		database_connection = MySQLSession()
 
 		pre_processing = PreProcessing(session=database_connection.get_session())
 		processing = Processing(session=database_connection.get_session())
