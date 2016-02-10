@@ -28,7 +28,7 @@ var svg = d3.select("body").append("svg")
 d3.xhr("http://127.0.0.1:5000/top_topics/")
     .header("Content-Type", "application/json")
     .post( 
-        JSON.stringify({limit: 100}),
+        JSON.stringify({limit: 500}),
         function(error, rawData){
             var root = JSON.parse(rawData.response)
             console.log(root)

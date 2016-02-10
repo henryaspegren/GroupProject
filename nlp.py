@@ -239,11 +239,11 @@ class Main(object):
 		topic_extraction   : %s\n""" % (str(quote_extraction), str(mention_extraction), str(topic_extraction)) 
 
 		# remote version
-		# database_session = MySQLSession(username='cstkilo', password='Kilo_Jagex', host='localhost', port=3307,
-		# 	database='cstkilo').get_session()
+		database_session = MySQLSession(username='cstkilo', password='Kilo_Jagex', host='localhost', port=3307,
+			database='cstkilo').get_session()
 
 		# local version
-		database_session = MySQLSession().get_session()
+		# database_session = MySQLSession().get_session()
 
 		pre_processing = PreProcessing(session=database_session)
 		processing = Processing(session=database_session)
@@ -302,7 +302,7 @@ class Main(object):
 
 # run the main program
 if __name__ == '__main__':
-	Main().run(quote_extraction=False, topic_extraction=True)
+	Main().run(quote_extraction=True, topic_extraction=True)
 
 
 
