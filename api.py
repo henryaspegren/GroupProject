@@ -1,6 +1,7 @@
 from flask import request, url_for
 from flask.ext.api import FlaskAPI, status, exceptions
 from sql_client import MySQLSession, ForumMessage, MessageTopic, Topic
+from sqlalchemy import func, desc
 import operator, collections
 
 app = FlaskAPI(__name__)
@@ -111,15 +112,59 @@ def top_topics_by_search_phrase():
 			limit = DEFAULT_LIMIT
 		print "top topics among messages containing: '%s' with limit: '%s'" % (search_phrase, limit)	
 
-		topics = database_connection.query(Topic).join(MessageTopic).join(ForumMessage).filter(ForumMessage.post.like('%'+search_phrase+'%')).order_by(Topic.message_count.desc()).limit(limit)
+		res = database_connection.query(ForumMessage, MessageTopic, Topic,
+				func.count(MessageTopic.topic_id).label('qty')) \
+			.join(MessageTopic) \
+			.join(Topic) \
+			.filter(ForumMessage.post.like('%'+search_phrase+'%')) \
+			.group_by(MessageTopic.topic_id) \
+			.order_by(desc('qty')) \
+			.limit(limit)
 
-		if topics is None:
+		count = database_connection.query(ForumMessage, MessageTopic) \
+			.join(MessageTopic) \
+			.filter(ForumMessage.post.like('%'+search_phrase+'%')) \
+		
+
+		# print "count is %i " % count
+
+		if res is None:
 			api_data = {'length': 0, 'top_topics' : []}
 		else:
 			top_topics = []
-			for topic in topics:
-				top_topics.append(topic.to_json())
+			for (forum_message, message_topic, topic, qty) in res:
+				top_topics.append({'topic': topic.topic, 
+					'topic_id': topic.topic_id, 'message_count' : qty})
 			api_data = {'length': len(top_topics), 'top_topics' : top_topics}
+		return api_data, status.HTTP_200_OK
+
+
+"""
+API for returning the top topics by number of messages. Later we can 
+group these hierarchically 
+
+Request: {"limit" : <max number of topics to return> }
+Response: {"name" : "Top Topics", 
+			"children" : [
+				{ "name" : <topic>,  "size" : <num messages> },
+				{ "name" : <topic2>, "size" : <num messages> }
+			]
+		}
+"""
+# Test
+#  curl -H "Content-Type: application/json" -X POST -d '{"limit": 10, "phrase": 
+# "hello"}' http://127.0.0.1:5000/top_topics_by_search_phrase/
+@app.route("/top_topics/", methods=['POST'])
+def top_topics():
+	if request.method != 'POST':
+		pass
+	else:
+		limit = int(request.data.get('limit'))
+		if limit is None:
+			limit = DEFAULT_LIMIT
+		topics = database_connection.query(Topic).order_by(Topic.message_count.desc()).limit(limit)
+		top_topics = [{"name" : topic.get_topic(), "size" : topic.get_message_count()} for topic in topics]
+		api_data = {"name": "Top Topics", "children" : top_topics}
 		return api_data, status.HTTP_200_OK
 
 

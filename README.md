@@ -46,6 +46,14 @@ CREATE TABLE `topics` (
   UNIQUE KEY `topic_UNIQUE` (`topic`)
 ) ENGINE=InnoDB AUTO_INCREMENT=82 DEFAULT CHARSET=latin1;
 
+## Table: users
+CREATE TABLE `users` (
+  `user_id` int(11) NOT NULL AUTO_INCREMENT,
+  `user` varchar(45) DEFAULT NULL,
+  `user_count` int(11) DEFAULT NULL,
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `user_UNIQUE` (`user`)
+) ENGINE=InnoDB AUTO_INCREMENT=82 DEFAULT CHARSET=latin1;
 
 
 # Setup for Python portion
@@ -57,11 +65,21 @@ makes synchronizing across platforms easy.
  python project can live
 
 $ virtualenv virt
+
+
 $ source virt/bin/activate
 
 3) now install all the required dependencies (foolproof!)
 
 $ pip install -r requirements.txt
+
+3.5)
+
+The dependency pyner must be installed manually from inside the virtual environment. Download [pyner](https://github.com/dat/pyner) as a zip and then run 
+
+$ python setup.py install
+
+from inside the directory of the source files
 
 4) when you want to leave the virtualenvironment 
 just run 
@@ -71,28 +89,49 @@ $ deactivate
 # NLP
 divided into pre-processing, topic extraction and message processing modules. 
 
+### Running Stanford NER as a standalone java module 
+$   java -mx1000m -cp stanford-ner/stanford-ner.jar edu.stanford.nlp.ie.NERServer     -loadClassifier stanford-ner/classifiers/english.muc.7class.distsim.crf.ser.gz  -port 8070 -outputFormat inlineXML
+
+
+When this server is running, make sure the socket is pointed to the correct hostname and port. Pass this into the extract_topic method in nlp.py
+
+In order to do this you need to have a copy of the [stanford nlp distribution](http://stanfordnlp.github.io/CoreNLP/) as well as [pyner](https://github.com/dat/pyner) installed
+
+
 # API
 Current iteration
 
 ### API for looking up messages that contain a search phrase
 
+Endpoint: /search_phrase/
+
 Request: {'phrase' : <string to search form>
 			'limit' : <max number of messages to return> }
+
+
 Response: {'length' : <number of messages> 
 			'messages' : [<list of messages in json format>]}
 
 
 ### API for returning messages that contain a given topic (topic id)
 
+Endpoint: /search_topic/
+
 Request: {'topic_id' : <topic_id>
 			'limit' : <max number of messages to return>}
+
+
 Response: {'length' : <number of messages> 
 			'messages' : [<list of messages in json format>]}
 
 ### API for returning top topics in messages containing a search phrase
-(NEED TO RECONSIDER THIS)
+
+Endpoint: /top_topics_by_search_phrase/
+
 Request: {'search_phrase' : <message_topic> 
 			'limit' : <max number of messages to return> }
+
+
 Response: {'length' : <number of messages> 
 			'top_topics : [
 				{	topic : <topic_name>,
@@ -104,5 +143,19 @@ Response: {'length' : <number of messages>
 					message_count : <number_of_messages_in_this_topic>
 				}
 				]
-		    }
+		  }
+
+### API for returning top topics overall (by message count)
+
+Endpoint: /top_topics/
+
+Request: {"limit" : <max number of topics to return> }
+
+
+Response: {"name" : "Top Topics", 
+      "children" : [
+        { "name" : <topic>,  "size" : <num messages> },
+        { "name" : <topic2>, "size" : <num messages> }
+      ]
+    }
 
