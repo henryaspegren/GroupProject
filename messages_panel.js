@@ -23,7 +23,7 @@ $(document).ready(function () {
 
 //var request = function(topic, limit,linkToAPI){}		//This is the JSON request 
 //	$.ajax({
-//		url: linkToAPI,
+//		url: localhost...,
 //		data: {"topic":topic, "limit":limit}, 
 //		type: "GET",
 //		success: function (data) { 
