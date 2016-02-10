@@ -15,7 +15,6 @@ body {
 
 #left {
   border-radius: 0.5em;
-
   border: 3px solid #424242;
   background-color: #6e6e6e;
   color: #e8e8e8;
@@ -25,19 +24,19 @@ body {
 }
 
 #input-topic {
-  max-width: 80%;
-  padding: 0.25em;
-  height: 2em;
-  margin: auto;
-  outline: none;
-  overflow: hidden;
-  white-space: nowrap;
-  text-align: center;
-  border: 7px solid #ff8000;
-  border-radius: 0.5em;
-  background-color: rgba(0, 0, 0, 0);
-  color: #ff8000;
-  font-size: 2em;
+   max-width: 80%;
+   padding: 0.25em;
+   height: 2em;
+   margin: auto;
+   outline: none;
+   overflow: hidden;
+   white-space: nowrap;
+   text-align: center;
+   border: 7px solid #ff8000;
+   border-radius: 0.5em;
+   background-color: rgba(0, 0, 0, 0);
+   color: #ff8000;
+   font-size: 2em;
 }
 
 #topics {
@@ -58,6 +57,7 @@ body {
   cursor: pointer;
 }
 
-.no-pointer {
-  pointer-events: none;
+#topics li:hover {
+  border-width: 5px;
+  font-weight: bold;
 }
