@@ -2,20 +2,59 @@
 
 # Database Schema
 
-table: forum_messages
-contains: message_id (int, PK, NN), user_id (int), time_stamp (string), forum_name (string), post (string), cleaned_post (string)
+## Table: forum_messages
+CREATE TABLE `forum_messages` (
+  `message_id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) DEFAULT NULL,
+  `time_stamp` text,
+  `forum_name` text,
+  `post` text,
+  `cleaned_post` text,
+  PRIMARY KEY (`message_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=100001 DEFAULT CHARSET=latin1;
 
-table: topics 
-contains: topic_id (int), topic (string), message_count (int)
 
-table: message_topics
-contains: topic_id (int, FOREIGN KEY, PK), message_id (int, FOREIGN KEY, PK)
+## Table: message_quotes 
+CREATE TABLE `message_quotes` (
+  `quote_id` varchar(45) NOT NULL,
+  `message_id` int(11) NOT NULL,
+  PRIMARY KEY (`message_id`,`quote_id`),
+  CONSTRAINT `message_id` FOREIGN KEY (`message_id`) REFERENCES `forum_messages` (`message_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-table: message_quotes
-contains: quote_id (string, PK, Unique), message_id (int FOREIGN KEY, PK)
+## Table: quotes
+CREATE TABLE `quotes` (
+  `quote_id` varchar(45) NOT NULL,
+  `quote_text` text NOT NULL,
+  PRIMARY KEY (`quote_id`),
+  UNIQUE KEY `quote_id_UNIQUE` (`quote_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-table: quotes
-contains: quote_id (string, PK, Unique), quote_text (string, NOT NULL)
+## Table: message_topics
+CREATE TABLE `message_topics` (
+  `message_id` int(11) NOT NULL,
+  `topic_id` int(11) NOT NULL,
+  PRIMARY KEY (`message_id`,`topic_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+## Table: topics
+CREATE TABLE `topics` (
+  `topic_id` int(11) NOT NULL AUTO_INCREMENT,
+  `topic` varchar(45) DEFAULT NULL,
+  `message_count` int(11) DEFAULT NULL,
+  PRIMARY KEY (`topic_id`),
+  UNIQUE KEY `topic_UNIQUE` (`topic`)
+) ENGINE=InnoDB AUTO_INCREMENT=82 DEFAULT CHARSET=latin1;
+
+## Table: users
+CREATE TABLE `users` (
+  `user_id` int(11) NOT NULL AUTO_INCREMENT,
+  `user` varchar(45) DEFAULT NULL,
+  `user_count` int(11) DEFAULT NULL,
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `user_UNIQUE` (`user`)
+) ENGINE=InnoDB AUTO_INCREMENT=82 DEFAULT CHARSET=latin1;
+
 
 # Setup for Python portion
 1) install pip and virtualenv. Pip allows you to install python
@@ -26,11 +65,21 @@ makes synchronizing across platforms easy.
  python project can live
 
 $ virtualenv virt
+
+
 $ source virt/bin/activate
 
 3) now install all the required dependencies (foolproof!)
 
 $ pip install -r requirements.txt
+
+3.5)
+
+The dependency pyner must be installed manually from inside the virtual environment. Download [pyner](https://github.com/dat/pyner) as a zip and then run 
+
+$ python setup.py install
+
+from inside the directory of the source files
 
 4) when you want to leave the virtualenvironment 
 just run 
@@ -40,6 +89,73 @@ $ deactivate
 # NLP
 divided into pre-processing, topic extraction and message processing modules. 
 
+### Running Stanford NER as a standalone java module 
+$   java -mx1000m -cp stanford-ner/stanford-ner.jar edu.stanford.nlp.ie.NERServer     -loadClassifier stanford-ner/classifiers/english.muc.7class.distsim.crf.ser.gz  -port 8070 -outputFormat inlineXML
+
+
+When this server is running, make sure the socket is pointed to the correct hostname and port. Pass this into the extract_topic method in nlp.py
+
+In order to do this you need to have a copy of the [stanford nlp distribution](http://stanfordnlp.github.io/CoreNLP/) as well as [pyner](https://github.com/dat/pyner) installed
+
+
 # API
-Located in api.py. Uses JSON serialization and the format for requests and responses is specified in the google doc.
+Current iteration
+
+### API for looking up messages that contain a search phrase
+
+Endpoint: /search_phrase/
+
+Request: {'phrase' : <string to search form>
+			'limit' : <max number of messages to return> }
+
+
+Response: {'length' : <number of messages> 
+			'messages' : [<list of messages in json format>]}
+
+
+### API for returning messages that contain a given topic (topic id)
+
+Endpoint: /search_topic/
+
+Request: {'topic_id' : <topic_id>
+			'limit' : <max number of messages to return>}
+
+
+Response: {'length' : <number of messages> 
+			'messages' : [<list of messages in json format>]}
+
+### API for returning top topics in messages containing a search phrase
+
+Endpoint: /top_topics_by_search_phrase/
+
+Request: {'search_phrase' : <message_topic> 
+			'limit' : <max number of messages to return> }
+
+
+Response: {'length' : <number of messages> 
+			'top_topics : [
+				{	topic : <topic_name>,
+					topic_id : <topic_id>
+					message_count : <number_of_messages_in_this_topic>
+				},
+				{	topic : <topic2_name>,
+					topic_id : <topic_id2>
+					message_count : <number_of_messages_in_this_topic>
+				}
+				]
+		  }
+
+### API for returning top topics overall (by message count)
+
+Endpoint: /top_topics/
+
+Request: {"limit" : <max number of topics to return> }
+
+
+Response: {"name" : "Top Topics", 
+      "children" : [
+        { "name" : <topic>,  "size" : <num messages> },
+        { "name" : <topic2>, "size" : <num messages> }
+      ]
+    }
 

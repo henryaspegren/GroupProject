@@ -3,3 +3,5 @@ virt/
 *.sql
 .DS_Store
 data/
+pyner/
+stanford-ner/

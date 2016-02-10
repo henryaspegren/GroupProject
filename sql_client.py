@@ -11,16 +11,16 @@ Base = declarative_base()
 Represents a connection to a MYSQL database.
 """
 class MySQLSession(object):
-	def __init__(self, username='root', passowrd='password', host='localhost', port=3306, 
-			database='kilo'):
+	def __init__(self, username='cstkilo', password='Kilo_Jagex', host='localhost', port=3307,
+			database='cstkilo'):
 		self.username = username
-		self.passowrd = passowrd
+		self.password = password
 		self.host = host
 		self.port = port
 		self.database = database
 
 		# format: dialect+driver://username:password@host:port/database
-		self.engine = create_engine('mysql+pymysql://'+self.username+":"+self.passowrd \
+		self.engine = create_engine('mysql+pymysql://'+self.username+":"+self.password \
 			+"@"+self.host+":"+str(self.port)+"/"+self.database)
 
 	def get_engine(self):
@@ -83,9 +83,12 @@ class Topic(Base):
 
 	def __repr__(self):
 		if self.topic_id is None:
-			return "<Topic(topic_id='NA', topic='%s')>" % (self.topic)
+			return "<Topic(topic_id='NA', topic='%s', message_count='%i')>" % (self.topic, self.message_count)
 		else:
-			return "<Topic(topic_id='%i', topic='%s')>" % (self.topic_id, self.topic)
+			return "<Topic(topic_id='%i', topic='%s', message_count='%i')>" % (self.topic_id, self.topic, self.message_count)
+
+	def to_json(self):
+		return {'topic': self.topic, 'topic_id' : self.topic_id, 'message_count': self.message_count}
 
 	def get_topic_id(self):
 		return self.topic_id
@@ -153,3 +156,35 @@ class MessageQuote(Base):
 
 	def get_message_id(self):
 		return self.message_id
+
+
+"""
+ORM for the User database
+"""
+class User(Base):
+	__tablename__ = 'users'
+	user_id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
+	user = Column(String)
+	user_count = Column(Integer)
+
+	def __repr__(self):
+		if self.user_id is None:
+			return "<User(user_id='NA', user='%s')>" % (self.user)
+		else:
+			return "<User(user_id='%i', user='%s')>" % (self.user_id, self.user)
+
+	def get_user_id(self):
+		return self.user_id
+
+	def get_user(self):
+		return self.user
+
+	def get_user_count(self):
+		return self.user_count
+
+	def increment_user_count(self):
+		self.user_count += 1
+
+
+
+
