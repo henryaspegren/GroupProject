@@ -47,7 +47,7 @@ class TopicExtractor(object):
 			if token[0] == '@':
 				user_mentions.add(token)
 		return user_mentions
-		
+
 """
 Class for message processing
 """
@@ -80,7 +80,7 @@ class Processing(object):
 				new_topic = Topic(topic=topic_str, message_count=1)
 				db_session.add(new_topic)
 				db_session.commit()
-				if DEBUG: 
+				if DEBUG:
 					print 'Adding new topic'
 					print new_topic
 				topic_id = new_topic.get_topic_id()
@@ -112,7 +112,7 @@ class Processing(object):
 				if ((number_processed % UPDATE_MOD) == 0):
 					elapsed_time = (time.time()-start_time)
 					print "Processed : %i of %i in %s" % (number_processed, total, str(elapsed_time))
-			except Exception as e: 
+			except Exception as e:
 				print "Exception message ", str(e)
 				# rollback session
 				self.session.rollback()
@@ -144,6 +144,8 @@ class PreProcessing(object):
 		# default to use stored session
 		if db_session is None:
 			db_session = self.session
+
+		print "original message is: \n '%s' \n" % message_text
 
 		if results is not None:
 			results_dictionary = results.groupdict()
@@ -184,19 +186,25 @@ class PreProcessing(object):
 				if ((number_processed % UPDATE_MOD) == 0):
 					elapsed_time = (time.time()-start_time)
 					print "Processed : %i of %i in %s" % (number_processed, total, str(elapsed_time))
-			except Exception as e: 
+			except Exception as e:
 				print "Exception message ", str(e)
 
-	def extract_user_mentions_to_db(self, message):
 
+	def extract_user_mentions_to_db(self, message, db_session=None):
 		topic_extractor = TopicExtractor()
 		message_text = message.get_post()
-		tokens = topic_extractor.tokenizer.tokenize(message_text)
+
+		# default to use stored session
+		if db_session is None:
+			db_session = self.session
+
+		print "original message is: \n '%s' \n" % message_text
+
 		user_mentions = topic_extractor.extract_user_mentions(message)
 		message_id = message.get_message_id()
 
 		for mentioned_user in user_mentions:
-			user_row = self.session.query(User).filter(User.user == mentioned_user).first()
+			user_row = db_session.query(User).filter(User.user == mentioned_user).first()
 			user_id = None
 
 			if user_row is None:
@@ -213,30 +221,27 @@ class PreProcessing(object):
 				user_row.increment_user_count()
 
 		# remove the user mentions from the original message and store the clean message in the database
-		cleaned_message_text = re.sub(self.quote_regex, '', message_text)
+		cleaned_message_text = re.sub(self.users_regex, '', message_text)
 
 		# set the cleaned message text
 		message.set_cleaned_post(cleaned_message_text)
 
-		#clean_message = session.query(ForumMessage).
-		#session.query(ForumMessage).filter(ForumMessage.message_id = message_id).set_clean_message(clean_message);
 
-	def run_user_mentions_extraction(self, message_iterator):
+	def run_user_mentions_extraction(self, message_iterator=None):
 		if message_iterator is None:
 			message_iterator = self.session.query(ForumMessage).order_by(ForumMessage.message_id)
 		for msg in message_iterator:
 			self.extract_user_mentions_to_db(msg)
-
 
 class Main(object):
 
 
 	def run(self, quote_extraction=False, mention_extraction=False, topic_extraction=False):
 
-		print """Performing preprocessing and nlp with 
+		print """Performing preprocessing and nlp with
 		quote_extraction   : %s
-		mention_extraction : %s 
-		topic_extraction   : %s\n""" % (str(quote_extraction), str(mention_extraction), str(topic_extraction)) 
+		mention_extraction : %s
+		topic_extraction   : %s\n""" % (str(quote_extraction), str(mention_extraction), str(topic_extraction))
 
 		# remote version
 		# database_session = MySQLSession(username='cstkilo', password='Kilo_Jagex', host='localhost', port=3307,
