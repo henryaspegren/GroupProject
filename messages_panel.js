@@ -1,5 +1,5 @@
 var linkToAPI = "http://127.0.0.1:5000/search_phrase/";
-var theme;
+
 
 $(document).ready(function () {
 	$("#left").scroll(function () {
@@ -12,7 +12,7 @@ $(document).ready(function () {
 		$(".scroll-height").text(height);
 		if (isScrolledToEnd) {
 			var json = new Object();
-			json.phrase = theme;
+			json.phrase = topic;
 			json.limit = 50;
 			request(linkToAPI,json,callback);
 		}
@@ -46,7 +46,6 @@ var callback = function(error, data){
 
 
 print_messages = function (topic) {
-	theme = topic;
 	var json = new Object();
 	json.phrase = topic;
 	json.limit = 50;

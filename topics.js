@@ -104,6 +104,7 @@ newTopic = function(topic) {
 
 loadTopics = function(topics) {
   var btns, data;
+  console.log(data);
   data = d3.select("#topics").selectAll("li").data(topics);
   btns = data.enter().append("li");
   data.style("opacity", 0).text(function(topic) {
