@@ -1,4 +1,4 @@
-var linkToAPI = "http://127.0.0.1:5000/top_topics_by_search_phrase/";
+var linkToAPI = "http://127.0.0.1:5000/search_phrase/";
 
 
 $(document).ready(function () {
@@ -23,14 +23,7 @@ $(document).ready(function () {
 
 
 var request = function (url, json, callback) {
-	$.ajax({
-         url: url,
-         type: "POST",
-         data: json,
-         dataType: "json",
-         contentType: "application/json",
-         success: callback(data)
-	})
+	d3.json(url).header("Content-Type", "application/json").post(JSON.stringify(json), function() {});
 };
 
 var callback = function(data){
@@ -39,14 +32,12 @@ var callback = function(data){
 		var currentLine = obj.messages[i].user_ID + ": " + obj.messages[i].post;
 		$("#left").append(currentLine+"<br> </br>");
 	}
-	
+
 };
 
 
 print_messages = function (topic) {
-	var json = new Object();
-	json.topic = topic;
-	json.limit = 50;
+	var json = { phrase: topic, limit: 50 };
 	request(linkToAPI,json,callback);
 	//var messagesArray = {
 	//	number: 3,
