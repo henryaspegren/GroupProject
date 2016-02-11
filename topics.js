@@ -97,7 +97,7 @@ newTopic = function(topic) {
     } else {
       response = json;
     }
-    print(topic);
+    print_messages(topic);
     return loadTopics(d3.shuffle(response.top_topics));
   });
 };

@@ -1,3 +1,6 @@
+var linkToAPI = "http://127.0.0.1:5000/top_topics_by_search_phrase/";
+
+
 $(document).ready(function () {
 	$("#left").scroll(function () {
 		// Infinite scroll -- when reach bottom, request more messages and append them to "left"
@@ -27,7 +30,8 @@ var request = function (url, json, callback) {
          dataType: "json",
          contentType: "application/json",
          success: callback(data)
-});
+	})
+};
 
 var callback = function(data){
 	var obj = JSON.parse(data);
@@ -36,10 +40,10 @@ var callback = function(data){
 		$("#left").append(currentLine+"<br> </br>");
 	}
 	
-}
+};
 
 
-var print = function (topic) {
+print_messages = function (topic) {
 	var json = new Object();
 	json.topic = topic;
 	json.limit = 50;
@@ -52,5 +56,4 @@ var print = function (topic) {
 	//		{ID: "m3", user_ID: "BranstonPickle82", post: topic+" boss guide: 1. Go to "+topic+"'s lair. 2. Kill "+topic+". 3. ????? 4. Profit!"},
 	//	]
 	//};
-	
 };

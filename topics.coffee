@@ -41,7 +41,7 @@ newTopic = (topic) ->
       else
         response = json
 
-      print topic
+      print_messages topic
       loadTopics d3.shuffle response.top_topics
 
 loadTopics = (topics) ->
