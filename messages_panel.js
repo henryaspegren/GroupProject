@@ -12,21 +12,20 @@ $(document).ready(function () {
 		$(".scroll-height").text(height);
 		if (isScrolledToEnd) {
 			var json = new Object();
-			json.topic = topic;
+			json.phrase = topic;
 			json.limit = 50;
-			request(linkToAPI,json,callback);
+			request(linkToAPI,topic,callback);
 		}
 	});
 });
 
 
 
-
-var request = function (url, json, callback) {
-	$.ajax({
+var request = function (url, topic, callback) {
+	$.post({
          url: url,
          type: "POST",
-         data: json,
+         data: {phrase:topic, limit:50},
          dataType: "json",
          contentType: "application/json",
          success: callback(data)
@@ -45,9 +44,9 @@ var callback = function(data){
 
 print_messages = function (topic) {
 	var json = new Object();
-	json.topic = topic;
+	json.phrase = topic;
 	json.limit = 50;
-	request(linkToAPI,json,callback);
+	request(linkToAPI,topic,callback);
 	//var messagesArray = {
 	//	number: 3,
 	//	messages: [
