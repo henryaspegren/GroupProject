@@ -87,7 +87,7 @@ newTopic = function(topic) {
   console.log("<Things happen to " + topic + ">");
   request = JSON.stringify({
     search_phrase: topic,
-    limit: 10
+    limit: 20
   });
   return d3.json("http://localhost:5000/top_topics_by_search_phrase/").header("Content-Type", "application/json").post(request, function(error, json) {
     var response;

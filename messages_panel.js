@@ -21,7 +21,13 @@ $(document).ready(function () {
 
 
 var request = function (url, json, callback) {
-	d3.json(url).header("Content-Type", "application/json").post(JSON.stringify(json), callback);
+	d3.json(url).header("Content-Type", "application/json").post(JSON.stringify(json), function(error, rjson) {
+		if (error) {
+			console.log(error);
+		} else {
+			callback(rjson);
+		}
+	});
 };
 
 // var request = function (url, json, callback) {
@@ -37,7 +43,7 @@ var request = function (url, json, callback) {
 // 	})
 // };
 
-var callback = function(error, data){
+var callback = function(data){
 	for(var i=0; i<data.messages.length;i++){
 		var currentLine = data.messages[i].user_id + ": " + data.messages[i].post;
 		$("#left").append(currentLine+"<br> </br>");
