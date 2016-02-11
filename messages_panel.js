@@ -1,5 +1,5 @@
 var linkToAPI = "http://127.0.0.1:5000/search_phrase/";
-
+var theme;
 
 $(document).ready(function () {
 	$("#left").scroll(function () {
@@ -12,7 +12,7 @@ $(document).ready(function () {
 		$(".scroll-height").text(height);
 		if (isScrolledToEnd) {
 			var json = new Object();
-			json.topic = topic;
+			json.phrase = theme;
 			json.limit = 50;
 			request(linkToAPI,json,callback);
 		}
@@ -20,24 +20,36 @@ $(document).ready(function () {
 });
 
 
-
-
 var request = function (url, json, callback) {
-	d3.json(url).header("Content-Type", "application/json").post(JSON.stringify(json), function() {});
+	d3.json(url).header("Content-Type", "application/json").post(JSON.stringify(json), callback);
 };
 
-var callback = function(data){
-	var obj = JSON.parse(data);
-	for(var i=0; i<obj.messages.length;i++){
-		var currentLine = obj.messages[i].user_ID + ": " + obj.messages[i].post;
+// var request = function (url, json, callback) {
+// 	console.log(json);
+// 	console.log(url);
+// 	$.ajax({
+//          url: url,
+//          type: "POST",
+//          data: json,
+//          dataType: "json",
+//          contentType: "application/json",
+//          success: callback
+// 	})
+// };
+
+var callback = function(error, data){
+	for(var i=0; i<data.messages.length;i++){
+		var currentLine = data.messages[i].user_id + ": " + data.messages[i].post;
 		$("#left").append(currentLine+"<br> </br>");
 	}
-
 };
 
 
 print_messages = function (topic) {
-	var json = { phrase: topic, limit: 50 };
+	theme = topic;
+	var json = new Object();
+	json.phrase = topic;
+	json.limit = 50;
 	request(linkToAPI,json,callback);
 	//var messagesArray = {
 	//	number: 3,

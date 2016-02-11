@@ -107,13 +107,13 @@ loadTopics = function(topics) {
   data = d3.select("#topics").selectAll("li").data(topics);
   btns = data.enter().append("li");
   data.style("opacity", 0).text(function(topic) {
-    return topic.name;
+    return topic.topic;
   }).transition().delay(function(topic, i) {
     return i * 50;
   }).style("opacity", 1).each("end", function() {
     return d3.select(this).on("click", function(topic) {
-      d3.select("#input-topic").text(topic.name);
-      return newTopic(topic.name);
+      d3.select("#input-topic").text(topic.topic);
+      return newTopic(topic.topic);
     });
   });
   return data.exit().transition().style("opacity", 0).remove();

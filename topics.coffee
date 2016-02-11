@@ -53,7 +53,7 @@ loadTopics = (topics) ->
       .append "li"
 
   data.style "opacity", 0
-      .text (topic) -> topic.name
+      .text (topic) -> topic.topic
       .transition()
       .delay (topic, i) -> i * 50
       .style "opacity", 1
@@ -61,8 +61,8 @@ loadTopics = (topics) ->
         d3.select this
           .on "click", (topic) ->
               d3.select "#input-topic"
-                .text topic.name
-              newTopic topic.name
+                .text topic.topic
+              newTopic topic.topic
 
   data.exit()
       .transition()
