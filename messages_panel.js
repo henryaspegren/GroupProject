@@ -46,7 +46,7 @@ var callback = function(error, data){
 
 
 print_messages = function (topic) {
-	topic = theme;
+	theme = topic;
 	var json = new Object();
 	json.phrase = topic;
 	json.limit = 50;
