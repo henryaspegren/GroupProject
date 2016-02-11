@@ -4,67 +4,67 @@ testResponse = {
   length: 10,
   top_topics: [
     {
-      name: "Zamorak",
+      topic: "Zamorak",
       topic_id: 1,
       number: 3
     }, {
-      name: "Saradomin",
+      topic: "Saradomin",
       topic_id: 2,
       number: 3
     }, {
-      name: "Guthix",
+      topic: "Guthix",
       topic_id: 3,
       number: 3
     }, {
-      name: "Armadyl",
+      topic: "Armadyl",
       topic_id: 4,
       number: 3
     }, {
-      name: "Seren",
+      topic: "Seren",
       topic_id: 5,
       number: 3
     }, {
-      name: "Bandos",
+      topic: "Bandos",
       topic_id: 6,
       number: 3
     }, {
-      name: "Icthlarin",
+      topic: "Icthlarin",
       topic_id: 8,
       number: 3
     }, {
-      name: "Amascut",
+      topic: "Amascut",
       topic_id: 9,
       number: 3
     }, {
-      name: "Elidinis",
+      topic: "Elidinis",
       topic_id: 10,
       number: 3
     }, {
-      name: "Scabaras",
+      topic: "Scabaras",
       topic_id: 11,
       number: 3
     }, {
-      name: "Zaros",
+      topic: "Zaros",
       topic_id: 12,
       number: 3
     }, {
-      name: "Marimbo",
+      topic: "Marimbo",
       topic_id: 13,
       number: 3
     }, {
-      name: "Jas",
+      topic: "Jas",
       topic_id: 14,
       number: 3
     }, {
-      name: "Bik",
+      topic: "Bik",
       topic_id: 15,
       number: 3
     }, {
-      name: "Mah",
+      topic: "Mah",
       topic_id: 16,
       number: 3
     }, {
-      name: "Brassica Prime",
+      topic: "Brassica Prime",
       topic_id: 17,
       number: 3
     }
