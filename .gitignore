@@ -3,5 +3,6 @@ virt/
 *.sql
 .DS_Store
 data/
-pyner/
+lib/source/pyner/build
+lib/source/pyner/dist
 stanford-ner/

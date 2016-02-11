@@ -95,7 +95,13 @@ $   java -mx1000m -cp stanford-ner/stanford-ner.jar edu.stanford.nlp.ie.NERServe
 
 When this server is running, make sure the socket is pointed to the correct hostname and port. Pass this into the extract_topic method in nlp.py
 
-In order to do this you need to have a copy of the [stanford nlp distribution](http://stanfordnlp.github.io/CoreNLP/) as well as [pyner](https://github.com/dat/pyner) installed
+In order to do this you need to have a copy of the [stanford nlp distribution](http://stanfordnlp.github.io/CoreNLP/) as well as [pyner](https://github.com/dat/pyner) installed.
+
+To install pyner execute the following 
+
+$ cd lib/source/pyner
+
+$ python setup.py install
 
 
 # API
