@@ -87,7 +87,7 @@ newTopic = function(topic) {
   console.log("<Things happen to " + topic + ">");
   request = JSON.stringify({
     search_phrase: topic,
-    limit: 10
+    limit: 20
   });
   return d3.json("http://localhost:5000/top_topics_by_search_phrase/").header("Content-Type", "application/json").post(request, function(error, json) {
     var response;
@@ -108,13 +108,13 @@ loadTopics = function(topics) {
   data = d3.select("#topics").selectAll("li").data(topics);
   btns = data.enter().append("li");
   data.style("opacity", 0).text(function(topic) {
-    return topic.name;
+    return topic.topic;
   }).transition().delay(function(topic, i) {
     return i * 50;
   }).style("opacity", 1).each("end", function() {
     return d3.select(this).on("click", function(topic) {
-      d3.select("#input-topic").text(topic.name);
-      return newTopic(topic.name);
+      d3.select("#input-topic").text(topic.topic);
+      return newTopic(topic.topic);
     });
   });
   return data.exit().transition().style("opacity", 0).remove();
