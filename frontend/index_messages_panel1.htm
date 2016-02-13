@@ -1,0 +1,67 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+
+<head><!-- meta ignored -->
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+	
+<style type="text/css">
+
+    body {
+      height: 80vh;
+      background-color: #2e2e2e;
+    }
+    
+    .grid {
+      display: flex;
+      height: 100%;
+    }
+    
+		.pane {
+		  flex: 1;
+		}
+		
+		#left {
+		  border-radius: 0.5em;
+		  
+		  border: 3px solid #424242;
+		  background-color: #6e6e6e;
+		  color: #e8e8e8;
+		  font-size: 1em;
+		  font-family: Verdana, sans-serif;
+		  overflow: scroll;
+		  
+		}
+		
+	</style>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+
+
+</head> <body>
+  	<!-- node type 8 -->
+  	<div class="grid">
+      <div class="pane" id="left">
+		<h3>Recent messages</h3>
+			<script src = "messages_panel.js"></script>
+			
+			
+			<p>message</p>					<!-- won't need these -->
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+			<p>message</p>
+
+      </div>
+      <div class="pane" id="right">
+      </div>
+    </div>
+  
+</body></html>
