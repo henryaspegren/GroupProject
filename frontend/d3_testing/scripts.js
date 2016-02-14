@@ -2,6 +2,10 @@
 
 	heavily based on
 	http://bl.ocks.org/mbostock/4062045
+	
+	really going for something like
+	
+	http://www.redotheweb.com/CodeFlower/
 
 */
 
@@ -40,13 +44,16 @@ function computeLinks(topics, n) {
 
 //past search queries, newest at the end
 //format matches JSON 'topics'
-var searchTopics = [{topic : 'jagex', number: 1, isSearchTerm : true}, {topics : 'rs', number: 1, isSearchTerm : true}];
+var searchTopics = [{topic : 'test', number:1, isSearchTerm:true},{topic : 'jagex', number: 1, isSearchTerm : true}, {topic : 'rs', number: 1, isSearchTerm : true}];
 
 json_related_topics = {
 	topics : [
 		{topic : 'inventions', number: 100},
 		{topic : 'skills', number : 10},
 		{topic : 'trump', number : 50},
+		{topic : 'inventions', number: 100},
+		{topic : 'skills', number : 10},
+		{topic : 'trump', number : 50}
 	]
 };
 
@@ -63,12 +70,12 @@ var combinedTopics = searchTopics.concat(topics);
 var numSearchedTopics = searchTopics.length;
 
 var links = computeLinks(combinedTopics, numSearchedTopics);
-
 var force = d3.layout.force()
     //.charge(-30)
     //.linkDistance(200)
-	.charge(function(d) { return d._children ? -d.size / 100 : -40; })
-	.linkDistance(function(d) { d.isSearchTerm ? 100 : 50})
+	.charge(function(d) { return d.isSearchTerm ? -3000 : -50; })
+	.linkDistance(function(d) { return d.isSearchTerm ? topics.length*100 : topics.length* 30})
+	.friction(0.8)
     .size([width, height]);
 
 
