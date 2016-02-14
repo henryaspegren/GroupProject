@@ -7,6 +7,9 @@ body {
 	stroke-width: 1px;
 }
 
+.node-circle {
+}
+
 .node-text {
 	stroke: #000;
 	stroke-width:0;

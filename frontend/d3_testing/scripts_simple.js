@@ -145,16 +145,25 @@ function loaded() {
 	node.append("title").text(function(d) {return d.topic;});
 */
 
+//testing
+var drag = d3.behavior.drag();
+
+
 	var node = svg.selectAll(".node")
 		.data(combinedTopics)
 		.enter().append("g")
 		.attr("class", "node");
 		//.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
 
-	node.append("circle")
+
+	var n = node.append("circle")
 		.attr("r", function(d) {return calcRadius(d); })
+		.attr("class", "node-cicle")
 		.style("fill", function(d) { return color(d); })
-   
+	
+	n.call(drag);
+  
+  
 	var c = node.append("text")
        .attr("text-anchor", "middle")
 	   .attr("class", "node-text");
