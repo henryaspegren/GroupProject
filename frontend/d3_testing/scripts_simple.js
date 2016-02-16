@@ -11,7 +11,7 @@
 
 
 
-function visualizer(searchTopic, relatedTopics, widthFraction, heightFraction, onTopicClickCallback) {
+function visualizer(parent, searchTopic, relatedTopics, widthFraction, heightFraction, onclickCallback) {
 
 	/*
 	arguments:
@@ -35,7 +35,6 @@ function visualizer(searchTopic, relatedTopics, widthFraction, heightFraction, o
 	//now: passed in as argument, of similar format { topic : 'test', number : 500}
 	//TODO: this is bad since it modifies searchTopic argument
 	searchTopic['isSearchTerm'] = true;
-	var searchTopics = searchTopic;
 	//see next block of comments
 	
 	
@@ -49,6 +48,10 @@ function visualizer(searchTopic, relatedTopics, widthFraction, heightFraction, o
 
 	
 	/*
+	
+	DEPRACATED:
+		now only passed the below 'topics' list as an argument
+	
 	json_related_topics = {
 		topics : [
 			{topic : 'inventions', number: 150},
@@ -91,16 +94,15 @@ function visualizer(searchTopic, relatedTopics, widthFraction, heightFraction, o
 	var width = window.innerWidth*X_SIZE,
 		height = window.innerHeight*Y_SIZE;
 
-	var topics = json_related_topics.topics;
-	var combinedTopics = [searchTopics[searchTopics.length-1]].concat(topics);
-	var numSearchedTopics = searchTopics.length;
+	var topics = relatedTopics;
+	//combine to pass to computeLinks and for d3's internal usage
+	var combinedTopics = [searchTopic].concat(topics);
+	var numSearchedTopics = searchTopic.number;
 
 	var links = computeLinks(combinedTopics);
 	var force = d3.layout.force()
-		//.charge(-30)
-		//.linkDistance(200)
 		.charge(function(d) { return calcRadius(d)/MIN_RADIUS * topics.length*-75; }) //repulsion force depends on radius of circle and number of topics in this circle
-		.linkDistance(function(d) { return MIN_DIST + 50*(5 - 5*Math.pow(1.15,-json_number_matching_search.number/(d.target.number)));} )
+		.linkDistance(function(d) { return MIN_DIST + 50*(5 - 5*Math.pow(1.15,-searchTopic.number/(d.target.number)));} )
 		.size([width, height]);
 
 
@@ -120,7 +122,7 @@ function visualizer(searchTopic, relatedTopics, widthFraction, heightFraction, o
 		if (node.isSearchTerm) {
 			return MAX_RADIUS*0.8;
 		} else {
-			return Math.max(MIN_RADIUS,MAX_RADIUS * (node.number/json_number_matching_search.number));
+			return Math.max(MIN_RADIUS,MAX_RADIUS * (node.number/searchTopic.number));
 		}
 	}
 
@@ -141,7 +143,9 @@ function visualizer(searchTopic, relatedTopics, widthFraction, heightFraction, o
 	//ACTUALLY MAKES IT RUN
 	function run() {
 
-		var svg = d3.select("body").append("svg")
+		console.log(parent[0]);
+
+		var svg = parent.append("svg")
 			.attr("width", width)
 			.attr("height", height);
 			
@@ -160,7 +164,7 @@ function visualizer(searchTopic, relatedTopics, widthFraction, heightFraction, o
 		var link = svg.selectAll('link')
 				.data(links)
 				.enter().append("line")
-				.attr("class", "link"); //could do a per-link styling for link thickness here
+				.attr("class", "node-link"); //could do a per-link styling for link thickness here
 
 		var node = svg.selectAll(".node")
 			.data(combinedTopics)
@@ -170,7 +174,7 @@ function visualizer(searchTopic, relatedTopics, widthFraction, heightFraction, o
 			.on("click", function (d) {
 				animateSelectedNode(this);
 				console.log("Selected: " + d);
-				//callback(d);
+				onclickCallback(d);
 				});
 
 
@@ -187,6 +191,9 @@ function visualizer(searchTopic, relatedTopics, widthFraction, heightFraction, o
 		c.append("tspan")
 			.text(function(d) { return d.topic})
 			.attr("textLength", function(d) { 
+				console.log(d);
+				//some sort of working dynamic text shrinking
+				//will need to modify the *7 for different fonts/font sizes
 				return Math.min(1.8*calcRadius(d), d.topic.length*7)  + "px";})
 			.attr("lengthAdjust", "spacingAndGlyphs");
 			
@@ -195,7 +202,6 @@ function visualizer(searchTopic, relatedTopics, widthFraction, heightFraction, o
 			.text(function(d) {return d.number})
 			.attr("dy", "1em")
 			.attr("x", "0");
-		
 
 		
 		//to do with animations
@@ -211,7 +217,51 @@ function visualizer(searchTopic, relatedTopics, widthFraction, heightFraction, o
 			node.attr("transform", function(d) {return "translate(" + d.x + "," + d.y + ")"; })
 		});
 	}
-
+	
+	return {
+		run : run
+	}
 }
 
+
+/* test data */
+
+//WOULD BE GREAT IF IT WERE LOGICAL
+//AND searchTopic.number > relatedTopics.__.number
+//ie. none of the subtopics are in more messages than the searchTopic
+//ASSUME: relatedTopics are all within searchTopic
+var searchTopic = {topic : 'runescape', number : 200};
+
+var relatedTopics = [
+	{topic : 'inventions', number: 150},
+	{topic : 'skills', number : 100},
+	{topic : 'trump', number : 50},
+	{topic : 'inventions', number: 10},
+	{topic : 'skills', number : 30},
+	{topic : 'trump', number : 80},
+	{topic : 'inventions', number: 110},
+	{topic : 'skills', number : 20},
+	{topic : 'trump', number : 40},
+	{topic : 'inventions', number: 120},
+	{topic : 'skills', number : 160},
+	{topic : 'trump', number : 50},
+	{topic : 'inventions', number: 100},
+	{topic : 'skills', number : 10},
+	{topic : 'trump', number : 50},
+	{topic : 'inventions', number: 1},
+	{topic : 'skills', number : 10},
+	{topic : 'trump', number : 50},
+	{topic : 'inventions', number: 100},
+	{topic : 'skills', number : 10},
+	{topic : 'trump', number : 50},
+	{topic : 'inventions', number: 100},
+	{topic : 'skills', number : 10},
+	{topic : 'trump', number : 50}
+];
+
+function ready() {
+	var visualization = visualizer(d3.select('body'), searchTopic, relatedTopics, 
+								0.7, 1.0, function (topic) {console.log(topic);});
+	visualization.run();
+}
 
