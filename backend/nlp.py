@@ -120,33 +120,39 @@ class Processing(object):
 
 """
 Class for preprocessing and cleaning the message data
+
+The pipepline for message cleaning is as follows:
+
+
+Preprocessing Phase:
+[ORIGINAL POST] -> quote_extraction -> mention_extraction -> forum_syntax_removal -> [CLEANED MESSAGE]
+
+NLP Phase:
+[CLEANED MESSAGE] -> topic_extraction -> sentiment_analysis
+
 """
 class PreProcessing(object):
 
-	# regex for quotes
 	# NOTE that this always grabs the outermost quote. So nested quotes will
 	# be treated text in the outermost quote
 	quote_regex_expr = r'(\[quote id=(?P<quote_id>([0-9-])+)\](?P<text>[\W\w]+)\[/quote\])+'
 	quote_regex = re.compile(quote_regex_expr, re.IGNORECASE)
 	users_regex_expr = r'@([a-\z][A-\Z][0-9])+'
 	users_regex = re.compile(users_regex_expr)
+	forum_syntax_regex_expr = r'(\[\w+\]|\[/\w+\])*'
+	forum_syntax_regex = re.compile(forum_syntax_regex_expr)
+
 
 	def __init__(self, session=MySQLSession().get_session()):
 		self.session = session
 
-	# note that there can be problems if the session we are using
-	# is not consistent with the session connected to the message
-	# object passed in.
-	def remove_quotes_from_message_to_db(self, message, db_session=None):
+
+	def remove_quotes_from_message_to_db(self, message):
+		# here we run it on the original post
+		# this is because quote extraction is first in the pipeline
+		# of pre-processing
 		message_text = message.get_post()
 		results = re.search(self.quote_regex, message_text)
-
-		# default to use stored session
-		if db_session is None:
-			db_session = self.session
-
-		print "original message is: \n '%s' \n" % message_text
-
 		if results is not None:
 			results_dictionary = results.groupdict()
 			# extract fields
@@ -158,26 +164,22 @@ class PreProcessing(object):
 			message.set_cleaned_post(cleaned_message_text)
 			# first tie the message to the quote
 			message_quote = MessageQuote(quote_id=quote_id, message_id=message.get_message_id())
-			db_session.merge(message_quote)
+			self.session.merge(message_quote)
 			# then add the quote
 			quote = Quote(quote_id=quote_id, quote_text=quote_text)
-			db_session.merge(quote)
+			self.session.merge(quote)
 		else:
 			# just use the original post
 			message.set_cleaned_post(message.get_post())
 
 		# helpful debugger output
 		if DEBUG:
-			print "original message is: \n '%s' \n" % message_text
-			print "cleaned message is: \n '%s' \n" % message.get_cleaned_post()
+			print "original message is : \n '%s' \n" % message_text
+			print "with quote removed  : \n '%s' \n" % message.get_cleaned_post()
 		
-		db_session.commit()
+		self.session.commit()
 
-	# run quote extraction over a set of messages
-	# if none is specified, then quote extraction will be run on the entire database
-	def run_quotes_extraction(self, message_iterator=None, number_processed=0, total=100000, start_time=time.time()):
-		if message_iterator is None:
-			message_iterator = self.session.query(ForumMessage).order_by(ForumMessage.message_id)
+	def run_quotes_extraction(self, message_iterator, number_processed=0, total=100000, start_time=time.time()):
 		for msg in message_iterator:
 			try:
 				self.remove_quotes_from_message_to_db(msg)
@@ -190,15 +192,37 @@ class PreProcessing(object):
 				print "Exception message ", str(e)
 
 
-	def extract_user_mentions_to_db(self, message, db_session=None):
-		topic_extractor = TopicExtractor()
+	def clean_forum_snytax_from_message(self, message):
+		# here we are running it on the cleaned message
+		# because in the chronology we extract quotes first 
+		# and store the result in the cleaned post
+		message_text = message.get_cleaned_post()
+		cleaned_message_text = re.sub(self.forum_syntax_regex, '', message_text)
+		message.set_cleaned_post(cleaned_message_text)
+
+		# helpful debugger output
+		if DEBUG:
+			print "original message is  : \n '%s' \n" % message_text
+			print "without forum syntax : \n '%s' \n" % cleaned_message_text
+
+		self.session.commit()
+
+
+	def run_forum_syntax_cleaning(self, message_iterator, number_processed=0, total=100000, start_time=time.time()):
+		for msg in message_iterator:
+			try: 
+				clean_forum_snytax_from_message(msg)
+				# simple log to see how much progress we has been made
+				if ((number_processed % UPDATE_MOD) == 0):
+					elapsed_time = (time.time()-start_time)
+					print "Processed : %i of %i in %s" % (number_processed, total, str(elapsed_time))
+			except Exception as e:
+				print "Exception message ", str(e)
+
+
+
+	def extract_user_mentions_to_db(self, message):
 		message_text = message.get_post()
-
-		# default to use stored session
-		if db_session is None:
-			db_session = self.session
-
-		print "original message is: \n '%s' \n" % message_text
 
 		user_mentions = topic_extractor.extract_user_mentions(message)
 		message_id = message.get_message_id()
@@ -233,15 +257,23 @@ class PreProcessing(object):
 		for msg in message_iterator:
 			self.extract_user_mentions_to_db(msg)
 
+
+
 class Main(object):
 
 
-	def run(self, quote_extraction=False, mention_extraction=False, topic_extraction=False):
+	def run(self, quote_extraction=False, mention_extraction=False, forum_syntax_removal=False, topic_extraction=False, sentiment_analysis=False):
 
-		print """Performing preprocessing and nlp with
-		quote_extraction   : %s
-		mention_extraction : %s
-		topic_extraction   : %s\n""" % (str(quote_extraction), str(mention_extraction), str(topic_extraction))
+		print """PreProcessing Phase
+
+		quote_extraction      : %s
+		mention_extraction    : %s
+		forum_syntax_removal : %s
+
+		NLP Phase
+
+		topic_extraction      : %s
+		sentiment_analysis    : %s\n""" % (str(quote_extraction), str(mention_extraction), str(forum_syntax_removal), str(topic_extraction), str(sentiment_analysis))
 
 		# remote version
 		database_session = MySQLSession(username='cstkilo', password='Kilo_Jagex', host='localhost', port=3307,
@@ -250,6 +282,8 @@ class Main(object):
 		# local version
 		# database_session = MySQLSession().get_session()
 
+		# it's important here that all the methods are using the same 
+		# database connection
 		pre_processing = PreProcessing(session=database_session)
 		processing = Processing(session=database_session)
 
@@ -265,13 +299,16 @@ class Main(object):
 			start_time = time.time()
 			# process the batches one at a time
 			while number_processed < total:
-				pre_processing.run_quotes_extraction(database_session.query(ForumMessage)
-					.order_by(ForumMessage.message_id).limit(batch_size).offset(number_processed),
-					number_processed=number_processed, total=total, start_time=start_time)
+				pre_processing.run_quotes_extraction(
+						database_session.query(ForumMessage)
+							.order_by(ForumMessage.message_id).limit(batch_size).offset(number_processed),
+						number_processed=number_processed, 
+						total=total, 
+						start_time=start_time)
 				number_processed += batch_size
 
 			print "___________________________________________________\n"
-			print "           Starting Quote Extraction               \n"
+			print "           Finished Quote Extraction               \n"
 			print "___________________________________________________\n"
 
 		if mention_extraction:
@@ -282,6 +319,32 @@ class Main(object):
 			print "___________________________________________________\n"
 			print "        Finished User Mention Extraction           \n"
 			print "___________________________________________________\n"
+
+
+		if forum_syntax_removal:
+			print "___________________________________________________\n"
+			print "         Starting Forum Syntax Cleaning            \n"
+			print "___________________________________________________\n"
+
+			# Split it into batches of 1000
+			total = database_session.query(ForumMessage).count()
+			number_processed = 0
+			batch_size = 1000
+			start_time = time.time()
+			# process the batches one at a time
+			while number_processed < total:
+				pre_processing.run_forum_syntax_cleaning(
+						database_session.query(ForumMessage)
+							.order_by(ForumMessage.message_id).limit(batch_size).offset(number_processed),
+						number_processed=number_processed, 
+						total=total, 
+						start_time=start_time)
+				number_processed += batch_size
+
+			print "___________________________________________________\n"
+			print "         Finished Forum Syntax Cleaning            \n"
+			print "___________________________________________________\n"
+
 
 		if topic_extraction:
 			print "___________________________________________________\n"
@@ -302,6 +365,25 @@ class Main(object):
 
 			print "___________________________________________________\n"
 			print "           Finished Topic Extraction               \n"
+			print "___________________________________________________\n"
+
+		if sentiment_analysis:
+			print "___________________________________________________\n"
+			print "          Starting Sentiment Analysis              \n"
+			print "___________________________________________________\n"
+
+			# Split it into batches of 1000
+			total = database_session.query(ForumMessage).count()
+			number_processed = 0
+			batch_size = 1000
+			start_time = time.time()
+			# process the batches one at a time
+			while number_processed < total:
+				# here is where we need to call the sentiment analyzer
+				# function
+
+			print "___________________________________________________\n"
+			print "          Finished Sentiment Analysis              \n"
 			print "___________________________________________________\n"
 
 
