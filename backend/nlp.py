@@ -39,15 +39,6 @@ class TopicExtractor(object):
 				named_entities.add(topic)
 		return named_entities
 
-	def extract_user_mentions(self, message):
-		message_text = message.get_post()
-		tokens = self.tokenizer.tokenize(message_text)
-		user_mentions = set()
-		for token in tokens:
-			if token[0] == '@':
-				user_mentions.add(token)
-		return user_mentions
-
 """
 Class for message processing
 """
@@ -137,7 +128,7 @@ class PreProcessing(object):
 	# be treated text in the outermost quote
 	quote_regex_expr = r'(\[quote id=(?P<quote_id>([0-9-])+)\](?P<text>[\W\w]+)\[/quote\])+'
 	quote_regex = re.compile(quote_regex_expr, re.IGNORECASE)
-	users_regex_expr = r'@([a-\z][A-\Z][0-9])+'
+	users_regex_expr = r'@(?P<username>(\w)+)'
 	users_regex = re.compile(users_regex_expr)
 	forum_syntax_regex_expr = r'(\[\w+\]|\[/\w+\])*'
 	forum_syntax_regex = re.compile(forum_syntax_regex_expr)
@@ -224,11 +215,15 @@ class PreProcessing(object):
 	def extract_user_mentions_to_db(self, message):
 		message_text = message.get_post()
 
-		user_mentions = topic_extractor.extract_user_mentions(message)
+		user_mentions = re.search(self.users_regex, message_text)
 		message_id = message.get_message_id()
 
 		for mentioned_user in user_mentions:
-			user_row = db_session.query(User).filter(User.user == mentioned_user).first()
+			mentions_dictionary = user_mentions.groupdict()
+			# extract fields
+			mentioned_user = results_dictionary['username']
+
+			user_row = self.session.query(User).filter(User.user == mentioned_user).first()
 			user_id = None
 
 			if user_row is None:
@@ -249,15 +244,20 @@ class PreProcessing(object):
 
 		# set the cleaned message text
 		message.set_cleaned_post(cleaned_message_text)
+		self.session.commit()
 
 
-	def run_user_mentions_extraction(self, message_iterator=None):
-		if message_iterator is None:
-			message_iterator = self.session.query(ForumMessage).order_by(ForumMessage.message_id)
+	def run_user_mentions_extraction(self, message_iterator, number_processed=0, total=100000, start_time=time.time()):
 		for msg in message_iterator:
-			self.extract_user_mentions_to_db(msg)
-
-
+			try:
+				self.extract_user_mentions_to_db(msg)
+				number_processed += 1
+				# simple log to see how much progress we has been made
+				if ((number_processed % UPDATE_MOD) == 0):
+					elapsed_time = (time.time()-start_time)
+					print "Processed : %i of %i in %s" % (number_processed, total, str(elapsed_time))
+			except Exception as e:
+				print "Exception message ", str(e)
 
 class Main(object):
 
@@ -315,7 +315,14 @@ class Main(object):
 			print "___________________________________________________\n"
 			print "        Starting User Mention Extraction           \n"
 			print "___________________________________________________\n"
-			pre_processing.run_user_mentions_extraction()
+			while number_processed < total:
+				pre_processing.run_user_mentions_extraction(
+						database_session.query(ForumMessage)
+							.order_by(ForumMessage.message_id).limit(batch_size).offset(number_processed),
+						number_processed=number_processed, 
+						total=total, 
+						start_time=start_time)
+				number_processed += batch_size
 			print "___________________________________________________\n"
 			print "        Finished User Mention Extraction           \n"
 			print "___________________________________________________\n"
