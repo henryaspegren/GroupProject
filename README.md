@@ -125,6 +125,7 @@ Response: {'length' : <number of messages>
 			'messages' : [<list of messages in json format>]}
 
 Example usage:
+
   {'phrase': "test", 'limit': 5, 'offset' : 0 } -> returns first 5 messages containing the string test
   {'phrase': "test", 'limit': 5, 'offset' : 5 } -> returns messages 5-10 containing the string test
 
@@ -146,6 +147,7 @@ Response: {'length' : <number of messages>
 			'messages' : [<list of messages in json format>]}
 
 Example usage:
+
   {'topic_id': 1, 'limit': 5, 'offset' : 0 } -> returns first 5 messages that are of topic 1
   {'topic_id': 1, 'limit': 5, 'offset' : 5 } -> returns messages 5-10 that are of topic 1
 
