@@ -6,8 +6,8 @@ import operator, collections
 
 app = FlaskAPI(__name__)
 
-
 DEFAULT_LIMIT = 10
+DEFAULT_OFFSET = 0
 
 # To Ping API:
 # curl -H "Content-Type: application/json" -X POST -d '{"limit": 10, "topic": 
@@ -16,12 +16,18 @@ DEFAULT_LIMIT = 10
 database_connection = MySQLSession().get_session()
 
 """
-API for looking up messages that contain a search phrase
+API for looking up messages that contain a search phrase. They are returned in the order of increasing message ID. The limit restricts the number of messages returned (defaults to a limit of 10). The offset specifies the number of messages to skip (defaults to 0) to make it possible for multiple API calls to go through all the results.
 
 Request: {'phrase' : <string to search form>
-			'limit' : <max number of messages to return> }
+			'limit' : <max number of messages to return>
+			'offset' : <number of messages to skip> }
 Response: {'length' : <number of messages> 
 			'messages' : [<list of messages in json format>]}
+
+Example usage:
+
+	{'phrase': "test", 'limit': 5, 'offset' : 0 } -> returns first 5 messages containing the string test
+	{'phrase': "test", 'limit': 5, 'offset' : 5 } -> returns messages 5-10 containing the string test
 
 """
 @app.route("/search_phrase/", methods=['POST'])
@@ -30,12 +36,19 @@ def search_phrase():
 		# todo: error message
 		pass
 	else: 
-	    phrase = str(request.data.get('phrase'))
-	    limit = int(request.data.get('limit'))
+	    phrase = request.data.get('phrase')
+	    limit = request.data.get('limit')
+	    offset = request.data.get('offset')
 	    if limit is None:
 	    	limit = DEFAULT_LIMIT
-	    print "searching for messages containing: '%s' with limit: '%i'" % (phrase, limit)
-	    messages = database_connection.query(ForumMessage).filter(ForumMessage.post.like('%'+phrase+'%')).limit(limit)
+	    if offset is None:
+	    	offset = DEFAULT_OFFSET
+	    print "searching for messages containing: '%s' with limit: '%i' and offset : '%i'" % (phrase, limit, offset)
+	    messages = database_connection.query(ForumMessage) \
+	    	.filter(ForumMessage.post.like('%'+phrase+'%')) \
+	    	.order_by(ForumMessage.message_id) \
+	    	.offset(offset) \
+	    	.limit(limit) 
 	    number_of_messages = 0
 	    results = []
 	    for message in messages:
@@ -45,13 +58,18 @@ def search_phrase():
 
 
 """
-API for returning messages that contain a given topic (topic id)
+API for returning messages that contain a given topic (topic id). They are returned in order of increasing message ID. The limit restricts the number of messages returned (defaults to a limit of 10). The offset specifes the number of messages to skip (defaults to 0) to make it possible for multiple API calls to go through all the results .
 
 Request: {'topic_id' : <topic_id>
-			'limit' : <max number of messages to return>}
+			'limit' : <max number of messages to return>
+			'offset' : <number of messages to skip> }
+
 Response: {'length' : <number of messages> 
 			'messages' : [<list of messages in json format>]}
 
+Example usage:
+  {'topic_id': 1, 'limit': 5, 'offset' : 0 } -> returns first 5 messages that are of topic 1
+  {'topic_id': 1, 'limit': 5, 'offset' : 5 } -> returns messages 5-10 that are of topic 1
 """
 @app.route("/search_topic/", methods=['POST'])
 def search_topic():
@@ -59,13 +77,20 @@ def search_topic():
 		# todo: error message
 		pass
 	else:
-		topic_id = str(request.data.get('topic_id'))
-		limit = int(request.data.get('limit'))
+		topic_id = request.data.get('topic_id')
+		limit = request.data.get('limit')
+		offset = request.data.get('offset')
 		if limit is None:
 			limit = DEFAULT_LIMIT
-		print "searching messages with topic_id: '%s' with limit: '%s'" % (topic, limit)		
+		if offset is None:
+			offset = DEFAULT_OFFSET
+		print "searching messages with topic_id: '%s' with limit: '%s' offset: '%s'" % (topic, limit, offset)		
 		# look up the message ids with that topic
-		message_ids = database_connection.query(MessageTopic).filter(MessageTopic.topic_id == topic_id).limit(limit)
+		message_ids = database_connection.query(MessageTopic) \
+			.filter(MessageTopic.topic_id == topic_id) \
+			.order_by(MessageTopic.message_id) \
+			.offset(offset) \
+			.limit(limit)
 		if message_ids is None:
 			api_data = { 'length': 0, 'messages' : [] }
 		else:
@@ -81,12 +106,12 @@ def search_topic():
 		return api_data, status.HTTP_200_OK
 
 """
-API for returning top topics in messages containing a search phrase
-
-TODO: pretty sure this isn't going to be scalable
+API for returning top topics in messages containing a search phrase. They are returned in order of the number of messages per topic (containing the search phrase). The limit specifies the maximum number of topics that can be returned. The offset allows specifies the number of topics to skip. 
 
 Request: {'search_phrase' : <message_topic> 
-			'limit' : <max number of messages to return> }
+			'limit' : <max number of messages to return> 
+			'offset' : <number of messages to skip>
+			}
 Response: {'length' : <number of messages> 
 			'top_topics : [
 				{	topic : <topic_name>,
@@ -99,6 +124,12 @@ Response: {'length' : <number of messages>
 				}
 				]
 		    }
+
+Example Usage:
+
+	{'search_phrase' : 'test', 'limit' : 5, 'offset' : 0 } -> top 5 (by message count) topics in messages containing the phrase "test"
+	{'search_phrase': 'test', 'limit' : 5, 'offset' : 5} -> next 5 (5-10) top topics in messages containing the phrase "test"
+
 """
 @app.route("/top_topics_by_search_phrase/", methods=['POST'])
 def top_topics_by_search_phrase():
@@ -106,11 +137,14 @@ def top_topics_by_search_phrase():
 		# todo: error message
 		pass
 	else:
-		search_phrase = str(request.data.get('search_phrase'))
-		limit = int(request.data.get('limit'))
+		search_phrase = request.data.get('search_phrase')
+		limit = request.data.get('limit')
+		offset = request.data.get('offset')
 		if limit is None:
 			limit = DEFAULT_LIMIT
-		print "top topics among messages containing: '%s' with limit: '%s'" % (search_phrase, limit)	
+		if offset is None:
+			offset = DEFAULT_OFFSET
+		print "top topics among messages containing: '%s' with limit: '%s' offset: '%s'" % (search_phrase, limit, offset)	
 
 		res = database_connection.query(ForumMessage, MessageTopic, Topic,
 				func.count(MessageTopic.topic_id).label('qty')) \
@@ -119,14 +153,8 @@ def top_topics_by_search_phrase():
 			.filter(ForumMessage.post.like('%'+search_phrase+'%')) \
 			.group_by(MessageTopic.topic_id) \
 			.order_by(desc('qty')) \
+			.offset(offset) \
 			.limit(limit)
-
-		count = database_connection.query(ForumMessage, MessageTopic) \
-			.join(MessageTopic) \
-			.filter(ForumMessage.post.like('%'+search_phrase+'%')) \
-		
-
-		# print "count is %i " % count
 
 		if res is None:
 			api_data = {'length': 0, 'top_topics' : []}
@@ -159,7 +187,7 @@ def top_topics():
 	if request.method != 'POST':
 		pass
 	else:
-		limit = int(request.data.get('limit'))
+		limit = request.data.get('limit')
 		if limit is None:
 			limit = DEFAULT_LIMIT
 		topics = database_connection.query(Topic).order_by(Topic.message_count.desc()).limit(limit)

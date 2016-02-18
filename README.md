@@ -109,33 +109,58 @@ Current iteration
 
 ### API for looking up messages that contain a search phrase
 
+
+They are returned in the order of increasing message ID. The limit restricts the number of messages returned (defaults to a limit of 10). The offset specifies the number of messages to skip (defaults to 0) to make it possible for multiple API calls to go through all the results.
+
+
 Endpoint: /search_phrase/
 
+
 Request: {'phrase' : <string to search form>
-			'limit' : <max number of messages to return> }
+			'limit' : <max number of messages to return> 
+      'offset' : <number of messages to skip> }
 
 
 Response: {'length' : <number of messages> 
 			'messages' : [<list of messages in json format>]}
 
+Example usage:
+  {'phrase': "test", 'limit': 5, 'offset' : 0 } -> returns first 5 messages containing the string test
+  {'phrase': "test", 'limit': 5, 'offset' : 5 } -> returns messages 5-10 containing the string test
 
 ### API for returning messages that contain a given topic (topic id)
 
+
+They are returned in order of increasing message ID. The limit restricts the number of messages returned (defaults to a limit of 10). The offset specifes the number of messages to skip (defaults to 0) to make it possible for multiple API calls to go through all the results .
+
+
 Endpoint: /search_topic/
 
+
 Request: {'topic_id' : <topic_id>
-			'limit' : <max number of messages to return>}
+			'limit' : <max number of messages to return>
+      'offset' : <number of messages to skip> }
 
 
 Response: {'length' : <number of messages> 
 			'messages' : [<list of messages in json format>]}
 
+Example usage:
+  {'topic_id': 1, 'limit': 5, 'offset' : 0 } -> returns first 5 messages that are of topic 1
+  {'topic_id': 1, 'limit': 5, 'offset' : 5 } -> returns messages 5-10 that are of topic 1
+
 ### API for returning top topics in messages containing a search phrase
+
+
+They are returned in order of the number of messages per topic (containing the search phrase). The limit specifies the maximum number of topics that can be returned. The offset allows specifies the number of topics to skip. 
+
 
 Endpoint: /top_topics_by_search_phrase/
 
+
 Request: {'search_phrase' : <message_topic> 
-			'limit' : <max number of messages to return> }
+			'limit' : <max number of messages to return> 
+      'offset' : <number of messages to skip>}
 
 
 Response: {'length' : <number of messages> 
@@ -150,6 +175,11 @@ Response: {'length' : <number of messages>
 				}
 				]
 		  }
+
+Example Usage:
+
+  {'search_phrase' : 'test', 'limit' : 5, 'offset' : 0 } -> top 5 (by message count) topics in messages containing the phrase "test"
+  {'search_phrase': 'test', 'limit' : 5, 'offset' : 5} -> next 5 (5-10) top topics in messages containing the phrase "test"
 
 ### API for returning top topics overall (by message count)
 
