@@ -1,12 +1,10 @@
 /*
-
 	heavily based on
 	http://bl.ocks.org/mbostock/4062045
-	
-	really going for something like, perhaps?
-	
-	http://www.redotheweb.com/CodeFlower/
 
+	really going for something like, perhaps?
+
+	http://www.redotheweb.com/CodeFlower/
 */
 
 
@@ -20,7 +18,7 @@ function visualizer(parent, searchTopic, relatedTopics, widthFraction, heightFra
 	   topics[0] MUST be last search query
 	returns:
 	  list of links connecting topics[0] to each other node
-	 
+
 	*/
 	function computeLinks(topics) {
 		links = [];
@@ -36,8 +34,8 @@ function visualizer(parent, searchTopic, relatedTopics, widthFraction, heightFra
 	//TODO: this is bad since it modifies searchTopic argument
 	searchTopic['isSearchTerm'] = true;
 	//see next block of comments
-	
-	
+
+
 	//-----------sample data---------------
 
 	//past search queries, newest at the end
@@ -46,12 +44,12 @@ function visualizer(parent, searchTopic, relatedTopics, widthFraction, heightFra
 	//var searchTopics = [{topic : 'test', number:500, isSearchTerm:true},{topic : 'jagex', number: 300, isSearchTerm : true}, {topic : 'rs', number: 200, isSearchTerm : true}];
 	//above line: DEPRACATED as of REPACKAGE
 
-	
+
 	/*
-	
+
 	DEPRACATED:
 		now only passed the below 'topics' list as an argument
-	
+
 	json_related_topics = {
 		topics : [
 			{topic : 'inventions', number: 150},
@@ -80,17 +78,17 @@ function visualizer(parent, searchTopic, relatedTopics, widthFraction, heightFra
 			{topic : 'trump', number : 50}
 		]
 	};
-	
+
 	*/
 
-	
+
 	//EDITABLE CONSTANTS
 	var MAX_RADIUS = 120;
 	var MIN_RADIUS = 30;
 	var MIN_DIST = MAX_RADIUS;
 	var X_SIZE = widthFraction; //percent in X and Y directions of screen to take up
 	var Y_SIZE = heightFraction;
-		
+
 	var width = window.innerWidth*X_SIZE,
 		height = window.innerHeight*Y_SIZE;
 
@@ -106,12 +104,11 @@ function visualizer(parent, searchTopic, relatedTopics, widthFraction, heightFra
 		.size([width, height]);
 
 
-		
-	
+
+
 	/*calculates radius size for a given topic
 	based on some kind of decay function I didn't really think about...
 	want small insignificant circles further out
-
 	args:
 	  node
 		node itself
@@ -139,7 +136,7 @@ function visualizer(parent, searchTopic, relatedTopics, widthFraction, heightFra
 			.style("fill", "rgb(0,100,255)");
 	}
 
-	
+
 	//ACTUALLY MAKES IT RUN
 	function run() {
 
@@ -148,7 +145,7 @@ function visualizer(parent, searchTopic, relatedTopics, widthFraction, heightFra
 		var svg = parent.append("svg")
 			.attr("width", width)
 			.attr("height", height);
-			
+
 		svg.append("svg:rect")
 			.style("stroke", "#999")
 			.style("fill", "#fff")
@@ -159,7 +156,7 @@ function visualizer(parent, searchTopic, relatedTopics, widthFraction, heightFra
 			.nodes(combinedTopics)
 			.links(links)
 			.start();
-			
+
 		//set up links and build them as per data needs
 		var link = svg.selectAll('link')
 				.data(links)
@@ -181,29 +178,29 @@ function visualizer(parent, searchTopic, relatedTopics, widthFraction, heightFra
 		var n = node.append("circle")
 			.attr("r", function(d) {return calcRadius(d); })
 			.attr("class", "node-circle")
-			.style("fill", function(d) { return color(d); });  
-	  
+			.style("fill", function(d) { return color(d); });
+
 		var c = node.append("text")
 		   .attr("text-anchor", "middle")
 		   .attr("class", "node-text");
-		   
+
 		//topic name in circle
 		c.append("tspan")
 			.text(function(d) { return d.topic})
-			.attr("textLength", function(d) { 
+			.attr("textLength", function(d) {
 				console.log(d);
 				//some sort of working dynamic text shrinking
 				//will need to modify the *7 for different fonts/font sizes
 				return Math.min(1.8*calcRadius(d), d.topic.length*7)  + "px";})
 			.attr("lengthAdjust", "spacingAndGlyphs");
-			
+
 		//number in circle, one line down and left align
 		c.append("tspan")
 			.text(function(d) {return d.number})
 			.attr("dy", "1em")
 			.attr("x", "0");
 
-		
+
 		//to do with animations
 		force.on("tick", function() {
 			link.attr("x1", function(d) { return d.source.x; })
@@ -213,11 +210,11 @@ function visualizer(parent, searchTopic, relatedTopics, widthFraction, heightFra
 
 			node.attr("cx", function(d) { return d.x; })
 				.attr("cy", function(d) { return d.y; });
-				
+
 			node.attr("transform", function(d) {return "translate(" + d.x + "," + d.y + ")"; })
 		});
 	}
-	
+
 	return {
 		run : run
 	}
@@ -260,8 +257,7 @@ var relatedTopics = [
 ];
 
 function ready() {
-	var visualization = visualizer(d3.select('body'), searchTopic, relatedTopics, 
+	var visualization = visualizer(d3.select('body'), searchTopic, relatedTopics,
 								0.7, 1.0, function (topic) {console.log(topic);});
 	visualization.run();
 }
-

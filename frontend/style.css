@@ -1,7 +1,11 @@
 body {
-  height: 80vh;
+  height: 98vh;
   background-color: #2e2e2e;
   font-family: "Titillium Web", sans-serif;
+}
+
+h3 {
+  text-align: center;
 }
 
 .grid {
@@ -11,9 +15,10 @@ body {
 
 .pane {
   flex: 1;
+  height: 100%;
 }
 
-#left {
+#right {
   border-radius: 0.5em;
   border: 3px solid #424242;
   background-color: #6e6e6e;
@@ -40,24 +45,25 @@ body {
 }
 
 #topics {
-  list-style-type: none;
+  text-align: center;
+  height: 80%;
 }
 
-#topics li {
-  display: inline-block;
-  text-align: center;
-  padding: 0.25em;
-  margin: 0.25em;
-  min-width: 3em;
-  border: 3px solid #ff8000;
-  border-radius: 0.5em;
-  font-size: 1.5em;
-  background-color: rgba(255, 150, 0, 0.2);
-  color: #e8e8e8;
+.node circle {
+  stroke: rgb(255, 128, 0);
+  stroke-width: 7px;
+  fill: rgb(88, 67, 37);
+}
+
+.node * {
   cursor: pointer;
 }
 
-#topics li:hover {
-  border-width: 5px;
-  font-weight: bold;
+.node tspan {
+  fill: rgb(230, 230, 230);
+}
+
+.node-link {
+  stroke: rgb(255, 128, 0);
+  stroke-width: 4px;
 }
