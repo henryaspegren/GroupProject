@@ -149,6 +149,7 @@ function visualizer(parent, searchTopic, relatedTopics, onclickCallback) {
 
 	//ACTUALLY MAKES IT RUN
 	function run() {
+		parent.select("svg").selectAll("*").remove();
 		var svg = parent.select("svg")
 			.attr("width", width)
 			.attr("height", height);
@@ -228,9 +229,9 @@ function visualizer(parent, searchTopic, relatedTopics, onclickCallback) {
 //AND searchTopic.message_count > relatedTopics.__.message_count
 //ie. none of the subtopics are in more messages than the searchTopic
 //ASSUME: relatedTopics are all within searchTopic
-var searchTopic = {topic : 'runescape', message_count : 200};
+var testSearchTopic = {topic : 'runescape', message_count : 200};
 
-var relatedTopics = [
+var testRelatedTopics = [
 	{topic : 'inventions', message_count: 150},
 	{topic : 'skills', message_count : 100},
 	{topic : 'trump', message_count : 50},
@@ -270,24 +271,31 @@ function ready() {
 }
 
 function newTopic(topic) {
-  callBackend("top_topics_by_search_phrase", {search_phrase: topic, limit: 20}, function(rspns) {
-    relatedTopics = rspns.top_topics;
+	callBackend("top_topics_by_search_phrase", {search_phrase: topic, limit: 20}, function(err, rspns) {
+		if (!err) {	//if no error in request
+			var relatedTopics = rspns.top_topics;
 
-    var searchTopicIndex;
-    for (var i=0; i<relatedTopics.length; i++) {
-      var t = relatedTopics[i];
-      if (t.topic === topic) {
-        searchTopic = t;
-        searchTopicIndex = i;
-        break;
-      }
-    }
-    relatedTopics.splice(searchTopicIndex, 1); // Remove entry in relatedTopics
+			console.log(relatedTopics);
+			var searchTopicIndex;
+			for (var i=0; i<relatedTopics.length; i++) {
+			  var t = relatedTopics[i];
+			  if (t.topic === topic) {
+				searchTopic = t;
+				searchTopicIndex = i;
+				break;
+			  }
+			}
+			relatedTopics.splice(searchTopicIndex, 1); // Remove entry in relatedTopics
 
-    d3.select("svg").remove()
-    var visualization = visualizer(d3.select("#topics"), searchTopic, relatedTopics, function (topic) {console.log(topic);});
-  	visualization.run();
+			var visualization = visualizer(d3.select("#topics"), searchTopic, relatedTopics, function (topic) {console.log(topic);});
+			visualization.run();
 
-    print_messages(topic);
-  });
+			print_messages(topic);
+		} else {
+			console.log("error ocurred, using default");
+			var visualization = visualizer(d3.select("#topics"), testSearchTopic, testRelatedTopics, function (topic) {console.log(topic);});
+			visualization.run();	
+		}
+	});
+		
 }
