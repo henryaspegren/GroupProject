@@ -268,15 +268,32 @@ function ready() {
 	}).on("click", function() {
 	  return d3.select(this).text("");
 	});
+	
+
+	$("#right").scroll(function () {
+		// Infinite scroll -- when reach bottom, request more messages and append them to "left"
+		var $this = $(this);
+		var height = this.scrollHeight - $this.height(); // Get the height of the div
+		var scroll = $this.scrollTop(); // Get the vertical scroll positio
+		var isScrolledToEnd = (scroll >= height);
+		$(".scroll-pos").text(scroll);
+		$(".scroll-height").text(height);
+		if (isScrolledToEnd) {
+			var json = { phrase: theme, limit: 50 };
+			callBackend("search_phrase", json, callback);
+		}
+	});
 }
 
 function newTopic(topic) {
+	var searchPhrase = topic;
 	callBackend("top_topics_by_search_phrase", {search_phrase: topic, limit: 20}, function(err, rspns) {
 		if (!err) {	//if no error in request
 			var relatedTopics = rspns.top_topics;
 
 			console.log(relatedTopics);
-			var searchTopic;
+			//pull out itself if its in the response
+			var searchTopic = null;
 			var searchTopicIndex;
 			for (var i=0; i<relatedTopics.length; i++) {
 			  var t = relatedTopics[i];
@@ -286,9 +303,15 @@ function newTopic(topic) {
 				break;
 			  }
 			}
-			relatedTopics.splice(searchTopicIndex, 1); // Remove entry in relatedTopics
-
-			var visualization = visualizer(d3.select("#topics"), searchTopic, relatedTopics, function (topic) {console.log(topic);});
+			if (searchTopic != null) {	//is part of the topic set
+				searchTopic['isSearchTerm'] = true;
+				relatedTopics.splice(searchTopicIndex, 1); // Remove entry in relatedTopics
+				var visualization = visualizer(d3.select("#topics"), searchTopic, relatedTopics, function (topic) {console.log(topic);});
+			} else {
+				console.log("response related topics does not contain the searched phrase");
+				console.log("reverting to separate parameter search_phrase_matches with value" + rspns.search_phrase_matches);
+				var visualization = visualizer(d3.select("#topics"), {topic: searchPhrase, message_count : rspns.search_phrase_matches, isSearchTerm: true}, relatedTopics, function (topic) {console.log(topic);});
+			}
 			visualization.run();
 
 			print_messages(topic);
