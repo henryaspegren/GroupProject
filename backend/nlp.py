@@ -1,15 +1,5 @@
-import os, re, nltk, time, sys, ner
-from nltk.tag.stanford import StanfordNERTagger
-from nltk import word_tokenize
+import os, re, time, sys, ner
 from sql_client import MySQLSession, ForumMessage, MessageTopic, Topic, MessageQuote, Quote, User
-from nltk.tokenize import TweetTokenizer
-
-# Root for the NLP classifier
-NLP_ROOT = os.getcwd()+'/stanford-ner/'
-
-# NLP classifier to use
-NER_CLASSIFIER = 'english.conll.4class.distsim.crf.ser.gz'
-# alternative: english.all.3class.distsim.crf.ser.gz
 
 # set to true to get a verbose output
 DEBUG = False
@@ -22,14 +12,9 @@ Class that abstracts away topic extraction
 """
 class TopicExtractor(object):
 
-	def __init__(self, tokenizer_model=TweetTokenizer(), ner_model=NER_CLASSIFIER, 
-		nlp_root=NLP_ROOT):
-		self.tokenizer = tokenizer_model
-		self.ner_tagger = StanfordNERTagger(nlp_root+'classifiers/'+ner_model, 
-			path_to_jar=(NLP_ROOT+'stanford-ner.jar'))
-
 	# this method now uses a java ner server to process requests which is much faster
 	# than calling java from python
+	# Need to make sure that the Java server is up and running on the speicified post
 	def extract_topics(self, message, socket_to_tagger=ner.SocketNER(host='localhost', port=8070)):
 		message_text = message.get_cleaned_post()
 		res = socket_to_tagger.get_entities(message_text)
@@ -156,8 +141,18 @@ class PreProcessing(object):
 			# first tie the message to the quote
 			message_quote = MessageQuote(quote_id=quote_id, message_id=message.get_message_id())
 			self.session.merge(message_quote)
+			# then we need to find the quoted message 
+			quoted_message = self.session.query(ForumMessage) \
+				.filter(ForumMessage.post.like('%'+quote_text+'%')) \
+				.filter(ForumMessage.message_id != message.get_message_id()) \
+				.first()
+			quoted_message_id = None
+			# we might not always be able to find it (for example could be 
+			#	a quote from a message not in the backing dataset)
+			if quoted_message is not None:
+				quoted_message_id = quoted_message.get_message_id()
 			# then add the quote
-			quote = Quote(quote_id=quote_id, quote_text=quote_text)
+			quote = Quote(quote_id=quote_id, quote_text=quote_text, quoted_message_id=quoted_message_id)
 			self.session.merge(quote)
 		else:
 			# just use the original post
@@ -388,7 +383,7 @@ class Main(object):
 			while number_processed < total:
 				# here is where we need to call the sentiment analyzer
 				# function
-
+				pass 
 			print "___________________________________________________\n"
 			print "          Finished Sentiment Analysis              \n"
 			print "___________________________________________________\n"
@@ -396,7 +391,7 @@ class Main(object):
 
 # run the main program
 if __name__ == '__main__':
-	Main().run(quote_extraction=True, topic_extraction=True)
+	Main().run(quote_extraction=True)
 
 
 

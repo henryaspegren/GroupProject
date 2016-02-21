@@ -26,8 +26,10 @@ CREATE TABLE `message_quotes` (
 CREATE TABLE `quotes` (
   `quote_id` varchar(45) NOT NULL,
   `quote_text` text NOT NULL,
+  `quoted_message_id` int(11),
   PRIMARY KEY (`quote_id`),
   UNIQUE KEY `quote_id_UNIQUE` (`quote_id`)
+  CONSTRAINT `quoted_message_id` FOREIGN KEY (`message_id`) REFERENCES `forum_messages` (`message_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 ## Table: message_topics

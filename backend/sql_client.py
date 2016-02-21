@@ -127,6 +127,7 @@ class Quote(Base):
 	__tablename__ = 'quotes'
 	quote_id = Column(String, primary_key=True, nullable=False, unique=True)
 	quote_text = Column(String, nullable=False)
+	quoted_message_id = Column(Integer, ForeignKey("forum_messages.message_id"), nullable=True)
 
 	def __repr__(self):
 		return "<Quote(quote_id='%s', quote_text='%s')>" % (self.quote_id, self.quote_text)
@@ -139,6 +140,12 @@ class Quote(Base):
 
 	def set_quote_text(self, new_quote_text):
 		self.quote_text = new_quote_text
+
+	def get_quoted_message_id(self):
+		return self.quoted_message_id
+
+	def set_quoted_message_id(self, quoted_message_id):
+		self.quoted_message_id = quoted_message_id 
 
 """
 ORM for the Message Quotes
