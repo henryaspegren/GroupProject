@@ -233,7 +233,6 @@ def top_topics_by_forum():
 			for (forum_message, message_topic, topic, quantity) in top_results:
 				top_topics_in_forum.append(topic.get_topic())
 			top_topics_keyed_by_forum.append([forum_name, top_topics_in_forum])
-		print top_topics_keyed_by_forum
 		return {"data" : top_topics_keyed_by_forum}, status.HTTP_200_OK
 
 
