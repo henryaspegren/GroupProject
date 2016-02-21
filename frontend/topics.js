@@ -10,7 +10,7 @@
 */
 
 function callBackend(api, json, onResponse) {
-  d3.json("https://localhost:5000/"+api+"/")
+  d3.json("http://localhost:5000/"+api+"/")
     .header("Content-Type", "application/json")
     .post(JSON.stringify(json), onResponse);
 }
@@ -276,6 +276,7 @@ function newTopic(topic) {
 			var relatedTopics = rspns.top_topics;
 
 			console.log(relatedTopics);
+			var searchTopic;
 			var searchTopicIndex;
 			for (var i=0; i<relatedTopics.length; i++) {
 			  var t = relatedTopics[i];
