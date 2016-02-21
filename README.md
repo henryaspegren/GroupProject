@@ -178,6 +178,7 @@ Response: {'length' : <number of messages>
 					message_count : <number_of_messages_in_this_topic>
 				}
 				]
+        'search_phrase_matches' : <number of messages matching the search phrase>
 		  }
 
 Example Usage:
@@ -199,3 +200,21 @@ Response: {"name" : "Top Topics",
       ]
     }
 
+### API for returning the top topics by number of messages in each forum. 
+
+
+They are returned in order of the number of messages in each topic.
+
+
+Endpoint : /top_topics_by_forum/
+
+Request : {"limit" : <max number of topics to return in each forum> }
+
+
+Response : {"data" : [
+            [<forum name> [topic_1, topic_2, ...]],
+            [<forum name> [topic_1, topic_2, ...]]
+          ]
+      }
+
+      

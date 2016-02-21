@@ -199,7 +199,7 @@ def top_topics():
 
 
 """
-API for returning the top topics by number of messages in each forum. 
+API for returning the top topics by number of messages in each forum. They are returned in the order of the number of messages. 
 
 Request : {"limit" : <max number of topics to return in each forum> }
 Response : {"data" : [
@@ -207,7 +207,6 @@ Response : {"data" : [
 						[<forum name> [topic_1, topic_2, ...]]
 					]
 			}
-
 """
 @app.route("/top_topics_by_forum/", methods=['POST'])
 def top_topics_by_forum():
