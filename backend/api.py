@@ -179,9 +179,6 @@ Response: {"name" : "Top Topics",
 			]
 		}
 """
-# Test
-#  curl -H "Content-Type: application/json" -X POST -d '{"limit": 10, "phrase": 
-# "hello"}' http://127.0.0.1:5000/top_topics_by_search_phrase/
 @app.route("/top_topics/", methods=['POST'])
 def top_topics():
 	if request.method != 'POST':
@@ -196,5 +193,35 @@ def top_topics():
 		return api_data, status.HTTP_200_OK
 
 
+
+@app.route("/top_topics_by_forum/", methods=['POST'])
+def top_topics_by_forum():
+	if request.method != 'POST':
+		pass
+	else:
+		limit = request.data.get('limit')
+		if limit is None:
+			# default limit here is 5
+			limit = 5
+		forums = database_connection.query(ForumMessage.forum_name).distinct()
+		top_topics_keyed_by_forum = []
+		for forum_res in forums:
+			# forum name is the first element of the results tuple
+			forum_name = forum_res[0]
+			top_results = database_connection.query(ForumMessage, MessageTopic, Topic, func.count(MessageTopic.topic_id).label('qty')) \
+				.join(MessageTopic) \
+				.join(Topic) \
+				.filter(ForumMessage.forum_name == forum_name) \
+				.group_by(MessageTopic.topic_id) \
+				.order_by(desc('qty')) \
+				.limit(limit)
+			top_topics_in_forum = []
+			for (forum_message, message_topic, topic, quantity) in top_results:
+				top_topics_in_forum.append(topic.get_topic())
+			top_topics_keyed_by_forum.append([forum_name, top_topics_in_forum])
+		print top_topics_keyed_by_forum
+		return {"data" : top_topics_keyed_by_forum}, status.HTTP_200_OK
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+   app.run(debug=True)
