@@ -56,7 +56,7 @@ text {
 d3.xhr("http://127.0.0.1:5000/top_topics_by_forum/")
     .header("Content-Type", "application/json")
     .post( 
-        JSON.stringify({limit: 5}),
+        JSON.stringify({limit: 10}),
         function(error, rawData){
             if (error) throw error;
             var root = JSON.parse(rawData.response);
@@ -152,8 +152,8 @@ function render_page(data) {
         .clamp(true);
 
     var diameter = 960;
-    var rect_width = 40;
-    var rect_height = 14;
+    var rect_width = 150;
+    var rect_height = 28;
 
     var link_width = "1px"; 
 
@@ -272,7 +272,7 @@ function render_page(data) {
         .attr('width', rect_width)
         .attr('height', rect_height)
         .attr('id', function(d) { return d.id; })
-        .attr('fill', function(d) { return get_color(d.name); });
+        .attr('fill', function(d) { return get_color(d.name, d.id_pure); });
       
     inode.append("text")
     	.attr('id', function(d) { return d.id + '-txt'; })
