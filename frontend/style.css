@@ -25,7 +25,8 @@ h3 {
   color: #e8e8e8;
   font-size: 1em;
   font-family: Verdana, sans-serif;
-  overflow: scroll;
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 
 #input-topic {
@@ -46,7 +47,7 @@ h3 {
 
 #topics {
   text-align: center;
-	height:100%;
+	height:90%;
 }
 
 .node circle {
