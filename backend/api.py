@@ -123,6 +123,7 @@ Response: {'length' : <number of messages>
 					message_count : <number_of_messages_in_this_topic>
 				}
 				]
+			'search_phrase_matches' : <number of messages matching the search phrase>
 		    }
 
 Example Usage:
@@ -146,6 +147,8 @@ def top_topics_by_search_phrase():
 			offset = DEFAULT_OFFSET
 		print "top topics among messages containing: '%s' with limit: '%s' offset: '%s'" % (search_phrase, limit, offset)	
 
+		number_of_messages_containing_phrase = database_connection.query(ForumMessage).filter(ForumMessage.post.like('%'+search_phrase+'%')).count()
+
 		res = database_connection.query(ForumMessage, MessageTopic, Topic,
 				func.count(MessageTopic.topic_id).label('qty')) \
 			.join(MessageTopic) \
@@ -156,6 +159,7 @@ def top_topics_by_search_phrase():
 			.offset(offset) \
 			.limit(limit)
 
+
 		if res is None:
 			api_data = {'length': 0, 'top_topics' : []}
 		else:
@@ -163,7 +167,7 @@ def top_topics_by_search_phrase():
 			for (forum_message, message_topic, topic, qty) in res:
 				top_topics.append({'topic': topic.topic, 
 					'topic_id': topic.topic_id, 'message_count' : qty})
-			api_data = {'length': len(top_topics), 'top_topics' : top_topics}
+			api_data = {'length': len(top_topics), 'top_topics' : top_topics, 'search_phrase_matches' : number_of_messages_containing_phrase}
 		return api_data, status.HTTP_200_OK
 
 
@@ -194,6 +198,17 @@ def top_topics():
 
 
 
+"""
+API for returning the top topics by number of messages in each forum. 
+
+Request : {"limit" : <max number of topics to return in each forum> }
+Response : {"data" : [
+						[<forum name> [topic_1, topic_2, ...]],
+						[<forum name> [topic_1, topic_2, ...]]
+					]
+			}
+
+"""
 @app.route("/top_topics_by_forum/", methods=['POST'])
 def top_topics_by_forum():
 	if request.method != 'POST':
