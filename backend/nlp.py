@@ -290,7 +290,7 @@ class SentimentAnalysis(object):
 		# defaults to stored session
 		if db_session is None:
 			db_session = self.session
-		sentiment = self.TextBlob(message).sentiment.polarity;
+		sentiment = TextBlob(message.get_post()).sentiment.polarity;
 		message_id = message.get_message_id()
 
 		message.set_sentiment(sentiment);
@@ -305,7 +305,7 @@ class SentimentAnalysis(object):
 
 		for msg in message_iterator:
 			try:
-				self.extract_message_topic_to_db(msg)
+				self.extract_message_sentiment_to_db(msg)
 				number_processed += 1
 				# simple log to see how much progress we has been made
 				if ((number_processed % UPDATE_MOD) == 0):

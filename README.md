@@ -10,7 +10,7 @@ CREATE TABLE `forum_messages` (
   `forum_name` text,
   `post` text,
   `cleaned_post` text,
-  'sentiment' float DEFAULT NULL,
+  `sentiment` float DEFAULT NULL,
   PRIMARY KEY (`message_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=100001 DEFAULT CHARSET=latin1;
 
