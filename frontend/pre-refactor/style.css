@@ -73,9 +73,3 @@ h3 {
   stroke: rgb(255, 128, 0);
   stroke-width: 4px;
 }
-
-/*------------ Messages styling --------------*/
-
-.messageContainer {
-	padding:10px;
-}
