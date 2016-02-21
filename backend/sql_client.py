@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine, ForeignKey
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -45,6 +45,8 @@ class ForumMessage(Base):
 	post = Column(String)
 	# to store the 'cleaned' pre-processed version of the post text
 	cleaned_post = Column(String)
+	# to store sentiment
+	sentiment = Column(Float)
 
 	def __repr__(self):
 		return "<ForumMessage(message_id='%i', user_id='%i', time_stamp='%s', forum_name='%s')>" % (self.message_id, self.user_id, self.time_stamp, self.forum_name)
@@ -64,8 +66,14 @@ class ForumMessage(Base):
 	def get_cleaned_post(self):
 		return self.cleaned_post
 
+	def get_sentiment(self):
+		return self.sentiment
+
 	def set_cleaned_post(self, cleaned_text):
 		self.cleaned_post = cleaned_text
+
+	def set_sentiment(self, sentiment):
+		self.sentiment = sentiment
 
 	# use this for serialization in the API
 	def to_json(self):

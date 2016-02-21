@@ -8,4 +8,5 @@ Werkzeug==0.11.3
 itsdangerous==0.24
 ner==0.1
 nltk==3.1
+textblob==0.11.1
 wsgiref==0.1.2

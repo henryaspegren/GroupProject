@@ -1,4 +1,9 @@
 import os, re, time, sys, ner
+import os, re, nltk, time, sys, ner, textblob
+from nltk.tag.stanford import StanfordNERTagger
+from nltk import word_tokenize
+from textblob import TextBlob
+from textblob.sentiments import NaiveBayesAnalyzer
 from sql_client import MySQLSession, ForumMessage, MessageTopic, Topic, MessageQuote, Quote, User
 
 # set to true to get a verbose output
@@ -23,6 +28,15 @@ class TopicExtractor(object):
 			for topic in topics:
 				named_entities.add(topic)
 		return named_entities
+
+	def extract_user_mentions(self, message):
+		message_text = message.get_cleaned_post()
+		tokens = self.tokenizer.tokenize(message_text)
+		user_mentions = set()
+		for token in tokens:
+			if token[0] == '@':
+				user_mentions.add(token)
+		return user_mentions
 
 """
 Class for message processing
@@ -141,13 +155,13 @@ class PreProcessing(object):
 			# first tie the message to the quote
 			message_quote = MessageQuote(quote_id=quote_id, message_id=message.get_message_id())
 			self.session.merge(message_quote)
-			# then we need to find the quoted message 
+			# then we need to find the quoted message
 			quoted_message = self.session.query(ForumMessage) \
 				.filter(ForumMessage.post.like('%'+quote_text+'%')) \
 				.filter(ForumMessage.message_id != message.get_message_id()) \
 				.first()
 			quoted_message_id = None
-			# we might not always be able to find it (for example could be 
+			# we might not always be able to find it (for example could be
 			#	a quote from a message not in the backing dataset)
 			if quoted_message is not None:
 				quoted_message_id = quoted_message.get_message_id()
@@ -178,9 +192,12 @@ class PreProcessing(object):
 				print "Exception message ", str(e)
 
 
+	def extract_user_mentions_to_db(self, message, db_session=None):
+		topic_extractor = TopicExtractor()
+		message_text = message.get_cleaned_post()
 	def clean_forum_snytax_from_message(self, message):
 		# here we are running it on the cleaned message
-		# because in the chronology we extract quotes first 
+		# because in the chronology we extract quotes first
 		# and store the result in the cleaned post
 		message_text = message.get_cleaned_post()
 		cleaned_message_text = re.sub(self.forum_syntax_regex, '', message_text)
@@ -196,7 +213,7 @@ class PreProcessing(object):
 
 	def run_forum_syntax_cleaning(self, message_iterator, number_processed=0, total=100000, start_time=time.time()):
 		for msg in message_iterator:
-			try: 
+			try:
 				clean_forum_snytax_from_message(msg)
 				# simple log to see how much progress we has been made
 				if ((number_processed % UPDATE_MOD) == 0):
@@ -253,6 +270,51 @@ class PreProcessing(object):
 					print "Processed : %i of %i in %s" % (number_processed, total, str(elapsed_time))
 			except Exception as e:
 				print "Exception message ", str(e)
+			try:
+				self.extract_user_mentions_to_db(msg)
+				number_processed += 1
+				# simple log to see how much progress we has been made
+				if ((number_processed % UPDATE_MOD) == 0):
+					elapsed_time = (time.time()-start_time)
+					print "Processed : %i of %i in %s" % (number_processed, total, str(elapsed_time))
+			except Exception as e:
+				print "Exception message ", str(e)
+
+class SentimentAnalysis(object):
+
+	def __init__(self, session=MySQLSession().get_session(), sentiment_analyzer=NaiveBayesAnalyzer()):
+		self.session = session
+		self.sentiment_analyzer = sentiment_analyzer
+
+	def extract_message_sentiment_to_db(self, message, db_session=None):
+		# defaults to stored session
+		if db_session is None:
+			db_session = self.session
+		sentiment = self.TextBlob(message).sentiment.polarity;
+		message_id = message.get_message_id()
+
+		message.set_sentiment(sentiment);
+		self.session.commit()
+
+	"""
+	Runs the snetiment analysis on a database iterator
+	"""
+	def run_sentiment_analysis(self, message_iterator=None, number_processed=0, total=100000, start_time=time.time()):
+		if message_iterator is None:
+			message_iterator = self.session.query(ForumMessage).order_by(ForumMessage.message_id)
+
+		for msg in message_iterator:
+			try:
+				self.extract_message_topic_to_db(msg)
+				number_processed += 1
+				# simple log to see how much progress we has been made
+				if ((number_processed % UPDATE_MOD) == 0):
+					elapsed_time = (time.time()-start_time)
+					print "Processed : %i of %i in %s" % (number_processed, total, str(elapsed_time))
+			except Exception as e:
+				print "Exception message ", str(e)
+				# rollback session
+				self.session.rollback()
 
 class Main(object):
 
@@ -277,10 +339,11 @@ class Main(object):
 		# local version
 		# database_session = MySQLSession().get_session()
 
-		# it's important here that all the methods are using the same 
+		# it's important here that all the methods are using the same
 		# database connection
 		pre_processing = PreProcessing(session=database_session)
 		processing = Processing(session=database_session)
+		sentiment_analysis = SentimentAnalysis(session=database_session, sentiment_analyzer=NaiveBayesAnalyzer())
 
 		if quote_extraction:
 			print "___________________________________________________\n"
@@ -297,8 +360,8 @@ class Main(object):
 				pre_processing.run_quotes_extraction(
 						database_session.query(ForumMessage)
 							.order_by(ForumMessage.message_id).limit(batch_size).offset(number_processed),
-						number_processed=number_processed, 
-						total=total, 
+						number_processed=number_processed,
+						total=total,
 						start_time=start_time)
 				number_processed += batch_size
 
@@ -314,8 +377,8 @@ class Main(object):
 				pre_processing.run_user_mentions_extraction(
 						database_session.query(ForumMessage)
 							.order_by(ForumMessage.message_id).limit(batch_size).offset(number_processed),
-						number_processed=number_processed, 
-						total=total, 
+						number_processed=number_processed,
+						total=total,
 						start_time=start_time)
 				number_processed += batch_size
 			print "___________________________________________________\n"
@@ -338,8 +401,8 @@ class Main(object):
 				pre_processing.run_forum_syntax_cleaning(
 						database_session.query(ForumMessage)
 							.order_by(ForumMessage.message_id).limit(batch_size).offset(number_processed),
-						number_processed=number_processed, 
-						total=total, 
+						number_processed=number_processed,
+						total=total,
 						start_time=start_time)
 				number_processed += batch_size
 
@@ -381,9 +444,11 @@ class Main(object):
 			start_time = time.time()
 			# process the batches one at a time
 			while number_processed < total:
-				# here is where we need to call the sentiment analyzer
-				# function
-				pass 
+				sentiment_analysis.run_sentiment_analysis(database_session.query(ForumMessage)
+					.order_by(ForumMessage.message_id).limit(batch_size).offset(number_processed),
+					number_processed=number_processed, total=total, start_time=start_time)
+				number_processed += batch_size
+				pass
 			print "___________________________________________________\n"
 			print "          Finished Sentiment Analysis              \n"
 			print "___________________________________________________\n"
@@ -391,7 +456,7 @@ class Main(object):
 
 # run the main program
 if __name__ == '__main__':
-	Main().run(quote_extraction=True)
+	Main().run(sentiment_analysis=True)
 
 
 
