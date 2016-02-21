@@ -85,7 +85,7 @@ function render_page(data) {
     	if (d == null)
     		return;
     	
-    	i = { id: 'i' + inner.length, name: d[0], related_links: [] };
+    	i = { id: 'i' + inner.length, name: d[0], related_links: [], id_pure: inner.length};
     	i.related_nodes = [i.id];
     	inner.push(i);
     	
@@ -141,12 +141,13 @@ function render_page(data) {
 
     console.log(data.outer.reduce(function(a,b) { return a + b.related_links.length; }, 0) / data.outer.length);
 
+    console.log(data);
 
     // from d3 colorbrewer: 
     // This product includes color specifications and designs developed by Cynthia Brewer (http://colorbrewer.org/).
     var colors = ["#a50026","#d73027","#f46d43","#fdae61","#fee090","#ffffbf","#e0f3f8","#abd9e9","#74add1","#4575b4","#313695"]
     var color = d3.scale.linear()
-        .domain([60, 220])
+        .domain([0, data.inner.length])
         .range([colors.length-1, 0])
         .clamp(true);
 
@@ -187,11 +188,12 @@ function render_page(data) {
     });
 
 
-    function get_color(name)
+    function get_color(name, id_pure)
     {   
-        var c = Math.round(color(name));
+        // var c = Math.round(color(name));
+        var c = id_pure;
         if (isNaN(c))
-            return '#a50026';	// fallback color
+            return '#dddddd';	// fallback color
         
         return colors[c];
     }
@@ -228,7 +230,7 @@ function render_page(data) {
         .attr('class', 'link')
         .attr('id', function(d) { return d.id })
         .attr("d", diagonal)
-        .attr('stroke', function(d) { return get_color(d.inner.name); })
+        .attr('stroke', function(d) { return get_color(d.inner.name, d.inner.id_pure); })
         .attr('stroke-width', link_width);
 
     // outer nodes
