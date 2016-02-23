@@ -33,11 +33,11 @@ function visualizer(parent, searchTopic, relatedTopics, onclickCallback) {
 	//now: passed in as argument, of format { topic : 'test', number : 500}
 	//this becomes the center bubble
 	//TODO: this is bad since it modifies searchTopic argument
-	searchTopic['isSearchTerm'] = true;
+	searchTopic.isSearchTerm = true;
 
 	/*
 	sample relatedTopics:
-	
+
 		topics : [
 			{topic : 'inventions', number: 150},
 			{topic : 'skills', number : 100},
@@ -65,15 +65,20 @@ function visualizer(parent, searchTopic, relatedTopics, onclickCallback) {
 			{topic : 'trump', number : 50}
 		]
 	*/
-
+	var width = parent.node().clientWidth,
+	  	height = parent.node().clientHeight;
 
 	//EDITABLE CONSTANTS
 	var MAX_RADIUS = 120;
 	var MIN_RADIUS = 30;
-	var MIN_DIST = MAX_RADIUS;
+	var MIN_DIST = MAX_RADIUS*2.0;
+	var MAX_DIST = Math.min(width, height) / 2 - MIN_RADIUS;
 
-	var width = parent.node().clientWidth,
-	  	height = parent.node().clientHeight;
+	var totalMessages = 0;
+	relatedTopics.forEach(function(t) {
+		totalMessages += t.message_count;
+	});
+	console.log(totalMessages);
 
 	var topics = relatedTopics;
   searchTopic.fixed = true; // Keep focal in centre
@@ -86,8 +91,8 @@ function visualizer(parent, searchTopic, relatedTopics, onclickCallback) {
 
 	var links = computeLinks(combinedTopics);
 	var force = d3.layout.force()
-		.charge(function(d) { return calcRadius(d)/MIN_RADIUS * topics.length*-75; }) //repulsion force depends on radius of circle and number of topics in this circle
-		.linkDistance(function(d) { return MIN_DIST + 50*(5 - 5*Math.pow(1.15,-searchTopic.message_count/(d.target.message_count)));} )
+		.charge(function(d) { if (d.isSearchTerm) return 0; else return -100; }) //repulsion force depends on number of topics in this circle
+		.linkDistance(function(d) { return smoothClamp(MIN_DIST, MAX_DIST, -1, 5, 2, 100 * d.target.message_count / totalMessages); } )
 		.size([width, height]);
 
 
@@ -105,10 +110,23 @@ function visualizer(parent, searchTopic, relatedTopics, onclickCallback) {
 	*/
 	function calcRadius(node) {
 		if (node.isSearchTerm) {
-			return MAX_RADIUS*0.8;
+			return MAX_RADIUS;
 		} else {
-			return Math.max(MIN_RADIUS,MAX_RADIUS * (node.message_count/searchTopic.message_count));
+			return smoothClamp(MIN_RADIUS, MAX_RADIUS, 1, 10, 5, 100 * node.message_count / totalMessages);
 		}
+	}
+
+  // I'm sure d3 must do this... but cba trying to fit it in when I know exactly what I want
+	// min is the minimum radius / distance
+	// max is the maximum radius / distance
+	// sgn is the correlation (1 - val increases with x, -1 - val decreases)
+	// c is the "centre" of the graph, with steepest slope, along the x axis
+	// k is the "stretch" of the function
+	// x is the input variable
+	// Use FooPlot to tweak e.g. 120 + 190*(1 + tanh((x-10)/5))
+	function smoothClamp(min, max, sgn, c, k, x) {
+		var a = (max - min) / 2;
+		return min + a * (1 + Math.tanh(sgn*(x - c) / k));
 	}
 
 	//edit this if different colors based on topic data wanted
@@ -172,7 +190,7 @@ function visualizer(parent, searchTopic, relatedTopics, onclickCallback) {
 				console.log(d);
 				//some sort of working dynamic text shrinking
 				//will need to modify the *7 for different fonts/font sizes
-				return Math.min(1.8*calcRadius(d), d.topic.length*7)  + "px";}) 
+				return Math.min(1.8*calcRadius(d), d.topic.length*7)  + "px";})
 			.attr("lengthAdjust", "spacingAndGlyphs");*/
 
 		//number in circle, one line down and left align

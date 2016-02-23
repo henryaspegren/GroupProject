@@ -23,7 +23,12 @@ h3 {
     color:#555;
 }
 
+#left {
+  flex: 2;
+}
+
 #right {
+  flex: 1;
   border-radius: 0.5em;
   border: 3px solid #424242;
   background-color: #6e6e6e;
