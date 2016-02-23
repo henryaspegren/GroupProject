@@ -77,7 +77,7 @@ class ForumMessage(Base):
 
 	# use this for serialization in the API
 	def to_json(self):
-		return {'message_id':self.message_id, 'user_id':self.user_id, 'forum_name': self.forum_name, 'post':self.post}
+		return {'message_id':self.message_id, 'user_id':self.user_id, 'forum_name': self.forum_name, 'post':self.cleaned_post, 'sentiment' : self.sentiment}
 
 
 """
