@@ -10,7 +10,7 @@ DEFAULT_LIMIT = 10
 DEFAULT_OFFSET = 0
 
 # To Ping API:
-# curl -H "Content-Type: application/json" -X POST -d '{"limit": 10, "topic": 
+# curl -H "Content-Type: application/json" -X POST -d '{"limit": 10, "topic_id":
 # "Demons"}' http://127.0.0.1:5000/search_topic/
 
 database_connection = MySQLSession().get_session()
@@ -150,7 +150,7 @@ def top_topics_by_search_phrase():
 		number_of_messages_containing_phrase = database_connection.query(ForumMessage).filter(ForumMessage.post.like('%'+search_phrase+'%')).count()
 
 		res = database_connection.query(ForumMessage, MessageTopic, Topic,
-				func.count(MessageTopic.topic_id).label('qty')) \
+				func.count(MessageTopic.topic_id).label('qty'), func.avg(ForumMessage.sentiment).label('sentiment')) \
 			.join(MessageTopic) \
 			.join(Topic) \
 			.filter(ForumMessage.post.like('%'+search_phrase+'%')) \
@@ -159,17 +159,15 @@ def top_topics_by_search_phrase():
 			.offset(offset) \
 			.limit(limit)
 
-
 		if res is None:
 			api_data = {'length': 0, 'top_topics' : []}
 		else:
 			top_topics = []
-			for (forum_message, message_topic, topic, qty) in res:
+			for (forum_message, message_topic, topic, qty, sentiment) in res:
 				top_topics.append({'topic': topic.topic, 
-					'topic_id': topic.topic_id, 'message_count' : qty})
+					'topic_id': topic.topic_id, 'message_count' : qty, 'sentiment': sentiment})
 			api_data = {'length': len(top_topics), 'top_topics' : top_topics, 'search_phrase_matches' : number_of_messages_containing_phrase}
 		return api_data, status.HTTP_200_OK
-
 
 """
 API for returning the top topics by number of messages. Later we can 
