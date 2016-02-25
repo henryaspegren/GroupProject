@@ -57,6 +57,35 @@ def search_phrase():
 	    return {'length': number_of_messages, 'messages': results }, status.HTTP_200_OK
 
 
+@app.route("/search_phrase_list/", methods=['POST'])
+def search_phrase_list():
+	if request.method != 'POST':
+		# todo: error message
+		pass
+	else: 
+	    phrase_list = request.data.get('phrase_list')
+	    limit = request.data.get('limit')
+	    offset = request.data.get('offset')
+	    if limit is None:
+	    	limit = DEFAULT_LIMIT
+	    if offset is None:
+	    	offset = DEFAULT_OFFSET
+	    messages = database_connection.query(ForumMessage)
+	    for phrase in phrase_list:
+	    	messages = messages.filter(ForumMessage.post.like('%'+phrase+'%')) 
+
+	    messages = messages.order_by(ForumMessage.message_id) \
+	    	.offset(offset) \
+	    	.limit(limit) 
+	    number_of_messages = 0
+	    results = []
+	    for message in messages:
+	    	results.append(message.to_json())
+	    	number_of_messages += 1
+	    return {'length': number_of_messages, 'messages': results }, status.HTTP_200_OK
+
+
+
 """
 API for returning messages that contain a given topic (topic id). They are returned in order of increasing message ID. The limit restricts the number of messages returned (defaults to a limit of 10). The offset specifes the number of messages to skip (defaults to 0) to make it possible for multiple API calls to go through all the results .
 
