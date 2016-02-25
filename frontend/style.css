@@ -63,7 +63,6 @@ h3 {
 .node circle {
   stroke: rgb(255, 128, 0);
   stroke-width: 7px;
-  fill: rgb(88, 67, 37);
 }
 
 .node * {
@@ -77,6 +76,22 @@ h3 {
 .node-link {
   stroke: rgb(255, 128, 0);
   stroke-width: 4px;
+}
+
+.sentiment-negative {
+	fill: rgba(200,0,0,0.9);
+}
+
+.sentiment-neutral {
+	fill: rgba(100,100,100,0.9);
+}
+
+.sentiment-positive {
+	fill: rgba(0,200,0, 0.9);
+}
+
+.NA {
+	fill: rbga(0,0,0,0);
 }
 
 /*------------ Messages styling --------------*/

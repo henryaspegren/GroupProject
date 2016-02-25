@@ -17,11 +17,14 @@ function setupMessagePanel() {
 
 //appends to current list of messages the new ones we received
 function searchPhraseCallback(err,data){
+	if (!data) {
+		return;
+	}
 	for (var i=0; i<data.messages.length;i++) {		
 		
 		var text = data.messages[i].post;
-		var regex = new RegExp("(\\b" + searched[searched.length - 1].trim() + "\\b)", "gim");
-		var res = text.replace(regex, '<span class = "highlight"> $1 </span>');
+		var regex = new RegExp("(" + searched[searched.length - 1].trim() + ")", "gim");
+		var res = text.replace(regex, '<span class = "highlight">$1</span>');
 		var line = data.messages[i].user_id + ": " + res;
 		
 		var textContainer = document.createElement('div');
