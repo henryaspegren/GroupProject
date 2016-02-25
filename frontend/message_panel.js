@@ -17,6 +17,9 @@ function setupMessagePanel() {
 
 //appends to current list of messages the new ones we received
 function searchPhraseCallback(err,data){
+	if (!data) {
+		return;
+	}
 	for (var i=0; i<data.messages.length;i++) {		
 		
 		var text = data.messages[i].post;

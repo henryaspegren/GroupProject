@@ -11,6 +11,7 @@
 
 function visualizer(parent, searchTopic, relatedTopics, onclickCallback) {
 
+
 	/*
 	arguments:
 	  topics
@@ -73,6 +74,9 @@ function visualizer(parent, searchTopic, relatedTopics, onclickCallback) {
 	var MIN_RADIUS = 30;
 	var MIN_DIST = MAX_RADIUS*2.0;
 	var MAX_DIST = Math.min(width, height) / 2 - MIN_RADIUS;
+	
+	var SENTIMENT_THRESHOLD = 0.2;
+
 
 	var totalMessages = 0;
 	relatedTopics.forEach(function(t) {
@@ -115,6 +119,10 @@ function visualizer(parent, searchTopic, relatedTopics, onclickCallback) {
 			return smoothClamp(MIN_RADIUS, MAX_RADIUS, 1, 10, 5, 100 * node.message_count / totalMessages);
 		}
 	}
+	
+	function tanhApprx(x) {
+		return (Math.exp(2*x) - 1)/(Math.exp(2*x) + 1);
+	}
 
   // I'm sure d3 must do this... but cba trying to fit it in when I know exactly what I want
 	// min is the minimum radius / distance
@@ -126,12 +134,19 @@ function visualizer(parent, searchTopic, relatedTopics, onclickCallback) {
 	// Use FooPlot to tweak e.g. 120 + 190*(1 + tanh((x-10)/5))
 	function smoothClamp(min, max, sgn, c, k, x) {
 		var a = (max - min) / 2;
-		return min + a * (1 + Math.tanh(sgn*(x - c) / k));
+		return min + a * (1 + tanhApprx(sgn*(x - c) / k));
 	}
 
 	//edit this if different colors based on topic data wanted
-	function color(node) {
-		return "#aaa";
+	function colorClass(node) {
+		var sentiment = node.sentiment;
+		if (sentiment < -SENTIMENT_THRESHOLD) {
+			return "sentiment-negative"
+		} else if (sentiment > SENTIMENT_THRESHOLD) {
+			return "sentiment-positive";
+		} else {
+			return "sentiment-neutral";
+		}
 	}
 
 	//edit this for changing on click animation
@@ -176,8 +191,9 @@ function visualizer(parent, searchTopic, relatedTopics, onclickCallback) {
 
 		var n = node.append("circle")
 			.attr("r", function(d) {return calcRadius(d); })
-			.attr("class", "node-circle");
-			//.style("fill", function(d) { return color(d); });
+			.attr("class", function(d) {
+				return "node-circle " + colorClass(d);
+			});
 
 		var c = node.append("text")
 		   .attr("text-anchor", "middle")
