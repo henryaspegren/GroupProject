@@ -24,6 +24,27 @@ function ready() {
 	setupMessagePanel();
 }
 
+function clearSearchbar() {
+	d3.select("#input-topic").text("");
+}
+
+function updateSearchedTopics() {
+	var searchedTopics = d3.select('#searched-container').selectAll('.searched-topic-container')
+		.data(searched);
+	var s = searchedTopics.enter()
+		.append('div')
+		.attr('class','searched-topic-container');
+	s
+		.append('div')
+		.attr('class', 'searched-topic-text')
+		.text(function(d) {return d;});
+	s
+		.append('div')
+		.attr('class', 'remove-search-topic');
+	
+	searchedTopics.exit().remove();
+}
+
 function onSearchChanged() {
 	//new topic is pushed onto searched, so is last item
 	//unless it's empty, then clear everything
@@ -32,6 +53,8 @@ function onSearchChanged() {
 		clearVisualization();
 	} else {
 		var newSearchTopic = searched[searched.length - 1]; //last one is newest one
+		clearSearchbar();
+		updateSearchedTopics();
 		newVisualization(newSearchTopic, addSearchTopic);
 		updateMessagesPanel(newSearchTopic);
 	}
