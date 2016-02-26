@@ -155,9 +155,18 @@ function visualizer(parent, searchTopic, relatedTopics, onclickCallback) {
 		  .transition()
 			.duration(500)
 			.style("fill", "rgb(0,100,255)")
-      .style("stroke", "rgb(0,75,192)");
+			.style("stroke", "rgb(0,75,192)");
 	}
-
+	
+	function animateRootSelected(nodeRef) {
+		d3.select(nodeRef).select('circle')
+		  .transition()
+			.duration(100)
+			.attr("transform", "scale(1.1, 1.1)")
+		  .transition()
+			.duration(100)
+			.attr("transform", "none");
+	}
 
 	//ACTUALLY MAKES IT RUN
 	function run() {
@@ -183,9 +192,15 @@ function visualizer(parent, searchTopic, relatedTopics, onclickCallback) {
 			.attr("class", "node")
 			//for callback that a node has been clicked on!
 			.on("click", function (d) {
-				animateSelectedNode(this);
-				console.log("Selected: " + d);
-				onclickCallback(d);
+				if (d.index == 0) { //this is root node
+					animateRootSelected(this);
+					console.log("selected ROOT node");
+				} else {
+					animateSelectedNode(this);
+					console.log("Selected: ");
+					console.log(d);
+					onclickCallback(d);
+				}
 			});
 
 
@@ -196,12 +211,30 @@ function visualizer(parent, searchTopic, relatedTopics, onclickCallback) {
 			});
 
 		var c = node.append("text")
-		   .attr("text-anchor", "middle")
-		   .attr("class", "node-text");
-
+			.attr("text-anchor", "middle")
+			.html(function (d) {
+				//have to create all the spans inside here because they may be dynamic #'s (for root bubble)
+				var tspans = "";
+				if (d.index != 0) {
+					tspans += "<tspan>"+d.topic+"</tspan>";
+				} else {
+					tspans += "<tspan>" + searched[0] + "</tspan>";
+					for (var i = 1; i < searched.length; i++) {
+						tspans += "<tspan dy='1em' x='0'>" + searched[i] + "</tspan>";
+					}
+				}
+				tspans +=
+					"<tspan dy='1em' x='0'>"
+					+ d.message_count
+					+ "</tspan>";
+				return tspans;
+			});
+/*
 		//topic name in circle
 		c.append("tspan")
-			.text(function(d) { return d.topic})
+			.text(function(d) {return d.topic})
+			
+*/			
 			/*.attr("textLength", function(d) {
 				console.log(d);
 				//some sort of working dynamic text shrinking
@@ -209,12 +242,14 @@ function visualizer(parent, searchTopic, relatedTopics, onclickCallback) {
 				return Math.min(1.8*calcRadius(d), d.topic.length*7)  + "px";})
 			.attr("lengthAdjust", "spacingAndGlyphs");*/
 
+/*
+now integrated into above .html function on text element
 		//number in circle, one line down and left align
 		c.append("tspan")
 			.text(function(d) {return d.message_count})
 			.attr("dy", "1em")
 			.attr("x", "0");
-
+*/
 
 		//to do with animations
 		force.on("tick", function() {

@@ -1,7 +1,7 @@
 from flask import request, url_for
 from flask.ext.api import FlaskAPI, status, exceptions
 from sql_client import MySQLSession, ForumMessage, MessageTopic, Topic
-from sqlalchemy import func, desc
+from sqlalchemy import func, desc, and_
 import operator, collections
 
 app = FlaskAPI(__name__)
@@ -18,8 +18,8 @@ database_connection = MySQLSession().get_session()
 """
 API for looking up messages that contain a search phrase. They are returned in the order of increasing message ID. The limit restricts the number of messages returned (defaults to a limit of 10). The offset specifies the number of messages to skip (defaults to 0) to make it possible for multiple API calls to go through all the results.
 """
-@app.route("/search_phrase/", methods=['POST'])
-def search_phrase():
+@app.route("/messages_with_phrase/", methods=['POST'])
+def messages_with_phrase():
 	if request.method != 'POST':
 		# todo: error message
 		pass
@@ -33,7 +33,7 @@ def search_phrase():
 	    	offset = DEFAULT_OFFSET
 	    print "searching for messages containing: '%s' with limit: '%i' and offset : '%i'" % (phrase, limit, offset)
 	    messages = database_connection.query(ForumMessage) \
-	    	.filter(ForumMessage.post.like('%'+phrase+'%')) \
+	    	.filter(ForumMessage.cleaned_post.like('%'+phrase+'%')) \
 	    	.order_by(ForumMessage.message_id) \
 	    	.offset(offset) \
 	    	.limit(limit) 
@@ -45,8 +45,8 @@ def search_phrase():
 	    return {'length': number_of_messages, 'messages': results }, status.HTTP_200_OK
 
 
-@app.route("/search_phrase_list/", methods=['POST'])
-def search_phrase_list():
+@app.route("/messages_with_phrase_list/", methods=['POST'])
+def messages_with_phrase_list():
 	if request.method != 'POST':
 		# todo: error message
 		pass
@@ -59,8 +59,9 @@ def search_phrase_list():
 	    if offset is None:
 	    	offset = DEFAULT_OFFSET
 	    messages = database_connection.query(ForumMessage)
-	    for phrase in phrase_list:
-	    	messages = messages.filter(ForumMessage.post.like('%'+phrase+'%')) 
+	    #for phrase in phrase_list:
+			#messages = messages.filter(ForumMessage.post.like('%'+phrase+'%'))
+	    messages = messages.filter(and_(*[ForumMessage.cleaned_post.like('%'+phrase+'%') for phrase in phrase_list]))
 
 	    messages = messages.order_by(ForumMessage.message_id) \
 	    	.offset(offset) \
@@ -90,7 +91,7 @@ def search_topic():
 			limit = DEFAULT_LIMIT
 		if offset is None:
 			offset = DEFAULT_OFFSET
-		print "searching messages with topic_id: '%s' with limit: '%s' offset: '%s'" % (topic, limit, offset)		
+		print "searching messages with topic_id: '%s' with limit: '%s' offset: '%s'" % (topic_id, limit, offset)		
 		# look up the message ids with that topic
 		message_ids = database_connection.query(MessageTopic) \
 			.filter(MessageTopic.topic_id == topic_id) \
@@ -121,6 +122,8 @@ def top_topics_by_search_phrase():
 		pass
 	else:
 		search_phrase = request.data.get('search_phrase')
+		if search_phrase is None:
+			search_phrase = ""
 		limit = request.data.get('limit')
 		offset = request.data.get('offset')
 		if limit is None:
@@ -135,7 +138,52 @@ def top_topics_by_search_phrase():
 				func.count(MessageTopic.topic_id).label('qty'), func.avg(ForumMessage.sentiment).label('sentiment')) \
 			.join(MessageTopic) \
 			.join(Topic) \
-			.filter(ForumMessage.post.like('%'+search_phrase+'%')) \
+			.filter(ForumMessage.cleaned_post.like('%'+search_phrase+'%')) \
+			.group_by(MessageTopic.topic_id) \
+			.order_by(desc('qty')) \
+			.offset(offset) \
+			.limit(limit)
+
+		if res is None:
+			api_data = {'length': 0, 'top_topics' : []}
+		else:
+			top_topics = []
+			for (forum_message, message_topic, topic, qty, sentiment) in res:
+				top_topics.append({'topic': topic.topic, 
+					'topic_id': topic.topic_id, 'message_count' : qty, 'sentiment': sentiment})
+			api_data = {'length': len(top_topics), 'top_topics' : top_topics, 'search_phrase_matches' : number_of_messages_containing_phrase}
+		return api_data, status.HTTP_200_OK
+
+"""
+API for returning top topics in messages containing a list of search phrases. They are returned in order of the number of messages per topic (containing the search phrases). The limit specifies the maximum number of topics that can be returned. The offset allows specifies the number of topics to skip. 
+"""	
+@app.route("/top_topics_by_search_phrase_list/", methods=['POST'])
+def top_topics_by_search_phrase_list():
+	if request.method != 'POST':
+		# todo: error message
+		pass
+	else:
+		search_phrase_list = request.data.get('phrase_list')
+		if search_phrase_list is None:
+			search_phrase_list = ""
+		limit = request.data.get('limit')
+		offset = request.data.get('offset')
+		if limit is None:
+			limit = DEFAULT_LIMIT
+		if offset is None:
+			offset = DEFAULT_OFFSET
+		print "top topics among messages containing: [%s] with limit: '%s' offset: '%s'" % (",".join(search_phrase_list), limit, offset)	
+
+		number_of_messages_containing_phrase = \
+			database_connection.query(ForumMessage) \
+				.filter(and_(*[ForumMessage.post.like('%'+search_phrase+'%') for search_phrase in search_phrase_list])) \
+				.count()
+
+		res = database_connection.query(ForumMessage, MessageTopic, Topic,
+				func.count(MessageTopic.topic_id).label('qty'), func.avg(ForumMessage.sentiment).label('sentiment')) \
+			.join(MessageTopic) \
+			.join(Topic) \
+			.filter(and_(*[ForumMessage.cleaned_post.like('%'+search_phrase+'%') for search_phrase in search_phrase_list])) \
 			.group_by(MessageTopic.topic_id) \
 			.order_by(desc('qty')) \
 			.offset(offset) \

@@ -55,6 +55,7 @@ h3 {
 #input-topic {
    max-width: 100%;
    text-align: center;
+   border: 1px solid #aaaaaa;
 }
 
 #searched-container {

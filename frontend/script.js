@@ -52,11 +52,10 @@ function onSearchChanged() {
 		clearMessagePanel();
 		clearVisualization();
 	} else {
-		var newSearchTopic = searched[searched.length - 1]; //last one is newest one
 		clearSearchbar();
 		updateSearchedTopics();
-		newVisualization(newSearchTopic, addSearchTopic);
-		updateMessagesPanel(newSearchTopic);
+		newVisualization(searched, addSearchTopic);
+		updateMessagesPanel(searched);
 	}
 }
 

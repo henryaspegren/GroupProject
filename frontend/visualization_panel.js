@@ -29,9 +29,9 @@ var testRelatedTopics = [
 ];
 
 
-function newVisualization(topic, clickedCallback) {
-	var searchPhrase = topic;
-	post("top_topics_by_search_phrase", {search_phrase: topic, limit: 20}, function(err, response) {
+function newVisualization(phraseList, clickedCallback) {
+	var searchPhrase = phraseList[phraseList.length - 1];
+	post("top_topics_by_search_phrase_list", {phrase_list: phraseList, limit: 20}, function(err, response) {
 		if (!err) {	//if no error in request
 			var relatedTopics = response.top_topics;
 
@@ -41,7 +41,7 @@ function newVisualization(topic, clickedCallback) {
 			var searchTopicIndex;
 			for (var i=0; i<relatedTopics.length; i++) {
 			  var t = relatedTopics[i];
-			  if (t.topic === topic) {
+			  if (t.topic === searchPhrase) {
 				searchTopic = t;
 				searchTopicIndex = i;
 				break;

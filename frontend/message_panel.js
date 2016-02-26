@@ -9,8 +9,8 @@ function setupMessagePanel() {
 		if (isScrolledToEnd) {
 			console.log("hit end of messages, getting more");
 			//extend current list of message
-			var json = { phrase: theme, limit: 50 };
-			post("search_phrase", json, searchPhraseCallback);
+			var json = { phrase_list: searched, limit: 50 };
+			post("messages_with_phrase_list", json, searchPhraseCallback);
 		}
 	});	
 }
@@ -40,9 +40,9 @@ function clearMessagePanel() {
 }
 
 //this gets called when the searched phrase has changed
-function updateMessagesPanel(phrase) {
-	var json = { phrase: phrase, limit : 50};
+function updateMessagesPanel(phraseList) {
+	var json = { phrase_list: phraseList, limit : 50};
 	clearMessagePanel();
-	post("search_phrase", json, searchPhraseCallback);
+	post("messages_with_phrase_list", json, searchPhraseCallback);
 }
 
