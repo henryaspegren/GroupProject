@@ -17,18 +17,6 @@ database_connection = MySQLSession().get_session()
 
 """
 API for looking up messages that contain a search phrase. They are returned in the order of increasing message ID. The limit restricts the number of messages returned (defaults to a limit of 10). The offset specifies the number of messages to skip (defaults to 0) to make it possible for multiple API calls to go through all the results.
-
-Request: {'phrase' : <string to search form>
-			'limit' : <max number of messages to return>
-			'offset' : <number of messages to skip> }
-Response: {'length' : <number of messages> 
-			'messages' : [<list of messages in json format>]}
-
-Example usage:
-
-	{'phrase': "test", 'limit': 5, 'offset' : 0 } -> returns first 5 messages containing the string test
-	{'phrase': "test", 'limit': 5, 'offset' : 5 } -> returns messages 5-10 containing the string test
-
 """
 @app.route("/search_phrase/", methods=['POST'])
 def search_phrase():
@@ -88,17 +76,6 @@ def search_phrase_list():
 
 """
 API for returning messages that contain a given topic (topic id). They are returned in order of increasing message ID. The limit restricts the number of messages returned (defaults to a limit of 10). The offset specifes the number of messages to skip (defaults to 0) to make it possible for multiple API calls to go through all the results .
-
-Request: {'topic_id' : <topic_id>
-			'limit' : <max number of messages to return>
-			'offset' : <number of messages to skip> }
-
-Response: {'length' : <number of messages> 
-			'messages' : [<list of messages in json format>]}
-
-Example usage:
-  {'topic_id': 1, 'limit': 5, 'offset' : 0 } -> returns first 5 messages that are of topic 1
-  {'topic_id': 1, 'limit': 5, 'offset' : 5 } -> returns messages 5-10 that are of topic 1
 """
 @app.route("/search_topic/", methods=['POST'])
 def search_topic():
@@ -136,30 +113,6 @@ def search_topic():
 
 """
 API for returning top topics in messages containing a search phrase. They are returned in order of the number of messages per topic (containing the search phrase). The limit specifies the maximum number of topics that can be returned. The offset allows specifies the number of topics to skip. 
-
-Request: {'search_phrase' : <message_topic> 
-			'limit' : <max number of messages to return> 
-			'offset' : <number of messages to skip>
-			}
-Response: {'length' : <number of messages> 
-			'top_topics : [
-				{	topic : <topic_name>,
-					topic_id : <topic_id>
-					message_count : <number_of_messages_in_this_topic>
-				},
-				{	topic : <topic2_name>,
-					topic_id : <topic_id2>
-					message_count : <number_of_messages_in_this_topic>
-				}
-				]
-			'search_phrase_matches' : <number of messages matching the search phrase>
-		    }
-
-Example Usage:
-
-	{'search_phrase' : 'test', 'limit' : 5, 'offset' : 0 } -> top 5 (by message count) topics in messages containing the phrase "test"
-	{'search_phrase': 'test', 'limit' : 5, 'offset' : 5} -> next 5 (5-10) top topics in messages containing the phrase "test"
-
 """
 @app.route("/top_topics_by_search_phrase/", methods=['POST'])
 def top_topics_by_search_phrase():
@@ -201,14 +154,6 @@ def top_topics_by_search_phrase():
 """
 API for returning the top topics by number of messages. Later we can 
 group these hierarchically 
-
-Request: {"limit" : <max number of topics to return> }
-Response: {"name" : "Top Topics", 
-			"children" : [
-				{ "name" : <topic>,  "size" : <num messages> },
-				{ "name" : <topic2>, "size" : <num messages> }
-			]
-		}
 """
 @app.route("/top_topics/", methods=['POST'])
 def top_topics():
@@ -227,13 +172,6 @@ def top_topics():
 
 """
 API for returning the top topics by number of messages in each forum. They are returned in the order of the number of messages. 
-
-Request : {"limit" : <max number of topics to return in each forum> }
-Response : {"data" : [
-						[<forum name> [topic_1, topic_2, ...]],
-						[<forum name> [topic_1, topic_2, ...]]
-					]
-			}
 """
 @app.route("/top_topics_by_forum/", methods=['POST'])
 def top_topics_by_forum():

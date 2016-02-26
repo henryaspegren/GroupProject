@@ -119,18 +119,22 @@ They are returned in the order of increasing message ID. The limit restricts the
 Endpoint: /search_phrase/
 
 
-Request: {'phrase' : <string to search form>
+Request: 
+  
+      {'phrase' : <string to search form>
 			'limit' : <max number of messages to return> 
       'offset' : <number of messages to skip> }
 
 
-Response: {'length' : <number of messages> 
-			'messages' : [<list of messages in json format>]}
+Response: 
+
+      {'length' : <number of messages> 
+			'messages' : [{'message_id':self.message_id, 'user_id':self.user_id, 'forum_name': self.forum_name, 'post':self.cleaned_post, 'sentiment' : self.sentiment}, {'message_id':self.message_id, 'user_id':self.user_id, 'forum_name': self.forum_name, 'post':self.cleaned_post, 'sentiment' : self.sentiment}, ...]}
 
 Example usage:
 
-  {'phrase': "test", 'limit': 5, 'offset' : 0 } -> returns first 5 messages containing the string test
-  {'phrase': "test", 'limit': 5, 'offset' : 5 } -> returns messages 5-10 containing the string test
+  ```{'phrase': "test", 'limit': 5, 'offset' : 0 }``` -> returns first 5 messages containing the string test
+  ```{'phrase': "test", 'limit': 5, 'offset' : 5 }``` -> returns messages 5-10 containing the string test
 
 ### API for returning messages that contain a given topic (topic id)
 
@@ -141,18 +145,22 @@ They are returned in order of increasing message ID. The limit restricts the num
 Endpoint: /search_topic/
 
 
-Request: {'topic_id' : <topic_id>
+Request: 
+
+      {'topic_id' : <topic_id>
 			'limit' : <max number of messages to return>
       'offset' : <number of messages to skip> }
 
 
-Response: {'length' : <number of messages> 
+Response: 
+
+      {'length' : <number of messages> 
 			'messages' : [<list of messages in json format>]}
 
 Example usage:
 
-  {'topic_id': 1, 'limit': 5, 'offset' : 0 } -> returns first 5 messages that are of topic 1
-  {'topic_id': 1, 'limit': 5, 'offset' : 5 } -> returns messages 5-10 that are of topic 1
+  ```{'topic_id': 1, 'limit': 5, 'offset' : 0 }``` -> returns first 5 messages that are of topic 1
+  ```{'topic_id': 1, 'limit': 5, 'offset' : 5 }``` -> returns messages 5-10 that are of topic 1
 
 ### API for returning top topics in messages containing a search phrase
 
@@ -163,43 +171,53 @@ They are returned in order of the number of messages per topic (containing the s
 Endpoint: /top_topics_by_search_phrase/
 
 
-Request: {'search_phrase' : <message_topic> 
-			'limit' : <max number of messages to return> 
-      'offset' : <number of messages to skip>}
+Request: 
+
+        {'search_phrase' : <message_topic> 
+      			'limit' : <max number of messages to return> 
+            'offset' : <number of messages to skip>}
 
 
-Response: {'length' : <number of messages> 
-			'top_topics : [
-				{	topic : <topic_name>,
-					topic_id : <topic_id>
-					message_count : <number_of_messages_in_this_topic>
-				},
-				{	topic : <topic2_name>,
-					topic_id : <topic_id2>
-					message_count : <number_of_messages_in_this_topic>
-				}
-				]
-        'search_phrase_matches' : <number of messages matching the search phrase>
-		  }
+Response:
+
+        {'length' : <number of messages> 
+      			'top_topics' : [
+      				{	topic : <topic_name>,
+      					topic_id : <topic_id>,
+      					message_count : <number_of_messages_in_this_topic>,
+                sentiment : <average_sentiment_of_messages_in_this_topic>
+      				},
+      				{	topic : <topic2_name>,
+      					topic_id : <topic_id2>,
+      					message_count : <number_of_messages_in_this_topic>,
+                sentiment : <average_sentiment_of_messages_in_this_topic>
+      				}
+      				]
+              'search_phrase_matches' : <number of messages matching the search phrase>
+      		  }
 
 Example Usage:
 
-  {'search_phrase' : 'test', 'limit' : 5, 'offset' : 0 } -> top 5 (by message count) topics in messages containing the phrase "test"
-  {'search_phrase': 'test', 'limit' : 5, 'offset' : 5} -> next 5 (5-10) top topics in messages containing the phrase "test"
+  ```{'search_phrase' : 'test', 'limit' : 5, 'offset' : 0 }``` -> top 5 (by message count) topics in messages containing the phrase "test"
+  ```{'search_phrase': 'test', 'limit' : 5, 'offset' : 5}``` -> next 5 (5-10) top topics in messages containing the phrase "test"
 
 ### API for returning top topics overall (by message count)
 
 Endpoint: /top_topics/
 
-Request: {"limit" : <max number of topics to return> }
+Request: 
+
+      {"limit" : <max number of topics to return> }
 
 
-Response: {"name" : "Top Topics", 
-      "children" : [
-        { "name" : <topic>,  "size" : <num messages> },
-        { "name" : <topic2>, "size" : <num messages> }
-      ]
-    }
+Response: 
+
+      {"name" : "Top Topics", 
+        "children" : [
+          { "name" : <topic>,  "size" : <num messages> },
+          { "name" : <topic2>, "size" : <num messages> }
+        ]
+      }
 
 ### API for returning the top topics by number of messages in each forum. 
 
@@ -209,10 +227,14 @@ They are returned in order of the number of messages in each topic.
 
 Endpoint : /top_topics_by_forum/
 
-Request : {"limit" : <max number of topics to return in each forum> }
+Request : 
+
+        {"limit" : <max number of topics to return in each forum> }
 
 
-Response : {"data" : [
+Response : 
+
+      {"data" : [
             [<forum name> [topic_1, topic_2, ...]],
             [<forum name> [topic_1, topic_2, ...]]
           ]
