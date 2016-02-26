@@ -116,25 +116,54 @@ Current iteration
 They are returned in the order of increasing message ID. The limit restricts the number of messages returned (defaults to a limit of 10). The offset specifies the number of messages to skip (defaults to 0) to make it possible for multiple API calls to go through all the results.
 
 
-Endpoint: /search_phrase/
+Endpoint: /messages_with_phrase/
 
 
 Request: 
   
-      {'phrase' : <string to search form>
-			'limit' : <max number of messages to return> 
-      'offset' : <number of messages to skip> }
+      {	'phrase' : <string to search form>
+		'limit' : <max number of messages to return> 
+		'offset' : <number of messages to skip> }
 
 
 Response: 
 
-      {'length' : <number of messages> 
-			'messages' : [{'message_id':self.message_id, 'user_id':self.user_id, 'forum_name': self.forum_name, 'post':self.cleaned_post, 'sentiment' : self.sentiment}, {'message_id':self.message_id, 'user_id':self.user_id, 'forum_name': self.forum_name, 'post':self.cleaned_post, 'sentiment' : self.sentiment}, ...]}
+      {	'length' : <number of messages> 
+		'messages' : [{'message_id':self.message_id, 'user_id':self.user_id, 'forum_name': self.forum_name, 'post':self.cleaned_post, 'sentiment' : self.sentiment}, {'message_id':self.message_id, 'user_id':self.user_id, 'forum_name': self.forum_name, 'post':self.cleaned_post, 'sentiment' : self.sentiment}, ...]}
 
 Example usage:
 
   ```{'phrase': "test", 'limit': 5, 'offset' : 0 }``` -> returns first 5 messages containing the string test
   ```{'phrase': "test", 'limit': 5, 'offset' : 5 }``` -> returns messages 5-10 containing the string test
+
+  
+  
+### API for looking up messages that contain a a list of search phrases
+
+
+They are returned in the order of increasing message ID. The limit restricts the number of messages returned (defaults to a limit of 10). The offset specifies the number of messages to skip (defaults to 0) to make it possible for multiple API calls to go through all the results.
+
+
+Endpoint: /messages_with_phrase_list/
+
+
+Request: 
+  
+      {	'phrase_list' : <string to search form>
+		'limit' : <max number of messages to return> 
+		'offset' : <number of messages to skip> }
+
+
+Response: 
+
+      {	'length' : <number of messages> 
+		'messages' : [{'message_id':self.message_id, 'user_id':self.user_id, 'forum_name': self.forum_name, 'post':self.cleaned_post, 'sentiment' : self.sentiment}, {'message_id':self.message_id, 'user_id':self.user_id, 'forum_name': self.forum_name, 'post':self.cleaned_post, 'sentiment' : self.sentiment}, ...]}
+
+Example usage:
+
+  ```{'phrase_list': ["test", "Jagex"], 'limit': 5, 'offset' : 0 }``` -> returns first 5 messages containing the strings test and Jagex
+  ```{'phrase': ["test", "Jagex"], 'limit': 5, 'offset' : 5 }``` -> returns messages 5-10 containing the strings test and Jagex
+
 
 ### API for returning messages that contain a given topic (topic id)
 
@@ -200,6 +229,46 @@ Example Usage:
 
   ```{'search_phrase' : 'test', 'limit' : 5, 'offset' : 0 }``` -> top 5 (by message count) topics in messages containing the phrase "test"
   ```{'search_phrase': 'test', 'limit' : 5, 'offset' : 5}``` -> next 5 (5-10) top topics in messages containing the phrase "test"
+
+  
+### API for returning top topics in messages containing a list of search phrases
+
+
+They are returned in order of the number of messages per topic (containing the search phrase). The limit specifies the maximum number of topics that can be returned. The offset allows specifies the number of topics to skip. 
+
+
+Endpoint: /top_topics_by_search_phrase_list/
+
+
+Request: 
+
+        {	'phrase_list' : <message_topic> 
+			'limit' : <max number of messages to return> 
+            'offset' : <number of messages to skip>}
+
+
+Response:
+
+        {'length' : <number of messages> 
+      			'top_topics' : [
+      				{	topic : <topic_name>,
+      					topic_id : <topic_id>,
+      					message_count : <number_of_messages_in_this_topic>,
+                sentiment : <average_sentiment_of_messages_in_this_topic>
+      				},
+      				{	topic : <topic2_name>,
+      					topic_id : <topic_id2>,
+      					message_count : <number_of_messages_in_this_topic>,
+                sentiment : <average_sentiment_of_messages_in_this_topic>
+      				}
+      				]
+              'search_phrase_matches' : <number of messages matching the search phrase>
+      		  }
+
+Example Usage:
+
+  ```{'phrase_list' : ['test', 'bla'], 'limit' : 5, 'offset' : 0 }``` -> top 5 (by message count) topics in messages containing the phrases "test" and "bla"
+  ```{'phrase_list': ['test', 'bla], 'limit' : 5, 'offset' : 5}``` -> next 5 (5-10) top topics in messages containing the phrases "test" and "bla"
 
 ### API for returning top topics overall (by message count)
 
