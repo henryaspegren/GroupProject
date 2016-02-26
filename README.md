@@ -121,15 +121,15 @@ Endpoint: /search_phrase/
 
 Request: 
   
-    ```{'phrase' : <string to search form>
+      {'phrase' : <string to search form>
 			'limit' : <max number of messages to return> 
-      'offset' : <number of messages to skip> }```
+      'offset' : <number of messages to skip> }
 
 
 Response: 
 
-    ```{'length' : <number of messages> 
-			'messages' : [{'message_id':self.message_id, 'user_id':self.user_id, 'forum_name': self.forum_name, 'post':self.cleaned_post, 'sentiment' : self.sentiment}, {'message_id':self.message_id, 'user_id':self.user_id, 'forum_name': self.forum_name, 'post':self.cleaned_post, 'sentiment' : self.sentiment}, ...]}```
+      {'length' : <number of messages> 
+			'messages' : [{'message_id':self.message_id, 'user_id':self.user_id, 'forum_name': self.forum_name, 'post':self.cleaned_post, 'sentiment' : self.sentiment}, {'message_id':self.message_id, 'user_id':self.user_id, 'forum_name': self.forum_name, 'post':self.cleaned_post, 'sentiment' : self.sentiment}, ...]}
 
 Example usage:
 
@@ -147,15 +147,15 @@ Endpoint: /search_topic/
 
 Request: 
 
-      ```{'topic_id' : <topic_id>
+      {'topic_id' : <topic_id>
 			'limit' : <max number of messages to return>
-      'offset' : <number of messages to skip> }```
+      'offset' : <number of messages to skip> }
 
 
 Response: 
 
-      ```{'length' : <number of messages> 
-			'messages' : [<list of messages in json format>]}```
+      {'length' : <number of messages> 
+			'messages' : [<list of messages in json format>]}
 
 Example usage:
 
@@ -173,14 +173,14 @@ Endpoint: /top_topics_by_search_phrase/
 
 Request: 
 
-      ```{'search_phrase' : <message_topic> 
+        {'search_phrase' : <message_topic> 
       			'limit' : <max number of messages to return> 
-            'offset' : <number of messages to skip>}```
+            'offset' : <number of messages to skip>}
 
 
 Response:
 
-       ```{'length' : <number of messages> 
+        {'length' : <number of messages> 
       			'top_topics' : [
       				{	topic : <topic_name>,
       					topic_id : <topic_id>,
@@ -194,7 +194,7 @@ Response:
       				}
       				]
               'search_phrase_matches' : <number of messages matching the search phrase>
-      		  }```
+      		  }
 
 Example Usage:
 
@@ -207,17 +207,17 @@ Endpoint: /top_topics/
 
 Request: 
 
-        ```{"limit" : <max number of topics to return> }```
+      {"limit" : <max number of topics to return> }
 
 
 Response: 
 
-    ```{"name" : "Top Topics", 
-      "children" : [
-        { "name" : <topic>,  "size" : <num messages> },
-        { "name" : <topic2>, "size" : <num messages> }
-      ]
-    }```
+      {"name" : "Top Topics", 
+        "children" : [
+          { "name" : <topic>,  "size" : <num messages> },
+          { "name" : <topic2>, "size" : <num messages> }
+        ]
+      }
 
 ### API for returning the top topics by number of messages in each forum. 
 
@@ -229,15 +229,15 @@ Endpoint : /top_topics_by_forum/
 
 Request : 
 
-      ```{"limit" : <max number of topics to return in each forum> }```
+        {"limit" : <max number of topics to return in each forum> }
 
 
 Response : 
 
-      ```{"data" : [
+      {"data" : [
             [<forum name> [topic_1, topic_2, ...]],
             [<forum name> [topic_1, topic_2, ...]]
           ]
-      }```
+      }
 
       
