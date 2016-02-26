@@ -28,6 +28,10 @@ var testRelatedTopics = [
 	{topic : 'trump', message_count : 50}
 ];
 
+function clearVisualization() {
+	d3.select("svg").selectAll("*").remove();
+}
+
 
 function newVisualization(phraseList, clickedCallback) {
 	var searchPhrase = phraseList[phraseList.length - 1];

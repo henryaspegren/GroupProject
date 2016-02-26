@@ -24,8 +24,20 @@ function ready() {
 	setupMessagePanel();
 }
 
-function clearSearchbar() {
+function clearSearchBar() {
 	d3.select("#input-topic").text("");
+}
+
+function resetSearchBar() {
+	d3.select("#input-topic").text("Enter a topic...");
+}
+
+function removeTopicCallback(elem) {
+	console.log("removing: ");
+	console.log(elem);
+	var text = elem.parentElement.getElementsByClassName("searched-topic-text")[0].innerHTML;
+	searched.pop(searched.indexOf(text));
+	onSearchChanged();
 }
 
 function updateSearchedTopics() {
@@ -40,7 +52,8 @@ function updateSearchedTopics() {
 		.text(function(d) {return d;});
 	s
 		.append('div')
-		.attr('class', 'remove-search-topic');
+		.attr('class', 'remove-search-topic')
+		.attr('onclick', 'removeTopicCallback(this)');
 	
 	searchedTopics.exit().remove();
 }
@@ -51,12 +64,13 @@ function onSearchChanged() {
 	if (searched.length == 0) {
 		clearMessagePanel();
 		clearVisualization();
+		resetSearchBar();
 	} else {
-		clearSearchbar();
-		updateSearchedTopics();
+		clearSearchBar();
 		newVisualization(searched, addSearchTopic);
 		updateMessagesPanel(searched);
 	}
+	updateSearchedTopics();
 }
 
 
