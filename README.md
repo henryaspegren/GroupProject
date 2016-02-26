@@ -163,12 +163,12 @@ They are returned in order of the number of messages per topic (containing the s
 Endpoint: /top_topics_by_search_phrase/
 
 
-Request: '{'search_phrase' : <message_topic> 
+Request: ```{'search_phrase' : <message_topic> 
 			'limit' : <max number of messages to return> 
-      'offset' : <number of messages to skip>}'
+      'offset' : <number of messages to skip>}```
 
 
-Response: '{'length' : <number of messages> 
+Response: ```{'length' : <number of messages> 
 			'top_topics' : [
 				{	topic : <topic_name>,
 					topic_id : <topic_id>,
@@ -183,7 +183,7 @@ Response: '{'length' : <number of messages>
 				}
 				]
         'search_phrase_matches' : <number of messages matching the search phrase>
-		  }''
+		  }```
 
 Example Usage:
 
