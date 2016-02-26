@@ -125,7 +125,7 @@ Request: {'phrase' : <string to search form>
 
 
 Response: {'length' : <number of messages> 
-			'messages' : [<list of messages in json format>]}
+			'messages' : [{'message_id':self.message_id, 'user_id':self.user_id, 'forum_name': self.forum_name, 'post':self.cleaned_post, 'sentiment' : self.sentiment}, {'message_id':self.message_id, 'user_id':self.user_id, 'forum_name': self.forum_name, 'post':self.cleaned_post, 'sentiment' : self.sentiment}, ...]}
 
 Example usage:
 
@@ -171,12 +171,15 @@ Request: {'search_phrase' : <message_topic>
 Response: {'length' : <number of messages> 
 			'top_topics : [
 				{	topic : <topic_name>,
-					topic_id : <topic_id>
-					message_count : <number_of_messages_in_this_topic>
+					topic_id : <topic_id>,
+					message_count : <number_of_messages_in_this_topic>,
+          sentiment : <average_sentiment_of_messages_in_this_topic>
+
 				},
 				{	topic : <topic2_name>,
-					topic_id : <topic_id2>
-					message_count : <number_of_messages_in_this_topic>
+					topic_id : <topic_id2>,
+					message_count : <number_of_messages_in_this_topic>,
+          sentiment : <average_sentiment_of_messages_in_this_topic>
 				}
 				]
         'search_phrase_matches' : <number of messages matching the search phrase>
