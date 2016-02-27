@@ -21,16 +21,33 @@ function searchPhraseCallback(err,data){
 		return;
 	}
 	for (var i=0; i<data.messages.length;i++) {		
-		
+		var sentiment = data.messages[i].sentiment;
 		var text = data.messages[i].post;
 		var regex = new RegExp("(" + searched[searched.length - 1].trim() + ")", "gim");
 		var res = text.replace(regex, '<span class = "highlight">$1</span>');
 		var line = data.messages[i].user_id + ": " + res;
 		
 		var textContainer = document.createElement('div');
-		$(textContainer).addClass("messageContainer")
+		console.log(sentiment);
+		
+		if(sentiment > 0.2)
+			$(textContainer).addClass("messageContainerPositive")
+				.html(line)
+				.appendTo($("#right"));
+		else if(sentiment < -0.2)
+			$(textContainer).addClass("messageContainerNegative")
 			.html(line)
 			.appendTo($("#right"));
+		else
+		{
+			$(textContainer).addClass("messageContainer")
+			.html(line)
+			.appendTo($("#right"));
+			//el = document.getElementsByClassName(".messageContainer");
+			//el.style.borderLeftStyle = "solid";
+			//el.style.borderLeftWidth = "10px";
+			//el.style.borderLeftColor = "blue";
+		}
 	}
 };
 
