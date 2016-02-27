@@ -253,7 +253,8 @@ class PreProcessing(object):
 		
 		for msg in message_iterator:
 			try:
-				clean_forum_snytax_from_message(msg)
+				self.clean_forum_snytax_from_message(msg)
+				number_processed += 1
 				# Simple log to see how much progress we has been made
 				if ((number_processed % UPDATE_MOD) == 0):
 					elapsed_time = (time.time()-start_time)
@@ -507,4 +508,4 @@ class Main(object):
 
 # Run the main program
 if __name__ == '__main__':
-	Main().run(sentiment_analysis=True)
+	Main().run(forum_syntax_removal=True)
