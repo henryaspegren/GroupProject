@@ -23,8 +23,12 @@ function searchPhraseCallback(err,data){
 	for (var i=0; i<data.messages.length;i++) {		
 		var sentiment = data.messages[i].sentiment;
 		var text = data.messages[i].post;
-		var regex = new RegExp("(" + searched[searched.length - 1].trim() + ")", "gim");
-		var res = text.replace(regex, '<span class = "highlight">$1</span>');
+		var res = text;
+		// now highlights all the terms that we have searched for!
+		for (var j=0; j<searched.length; j++){
+			var regex = new RegExp("(" + searched[j].trim() + ")", "gim");
+			res = res.replace(regex, '<span class = "highlight">$1</span>');
+		}
 		var line = data.messages[i].user_id + ": " + res;
 		
 		var textContainer = document.createElement('div');
