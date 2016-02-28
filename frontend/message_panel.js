@@ -1,39 +1,54 @@
+var offset = 0;
+
 function setupMessagePanel() {
+	offset = 0;
 	$("#right").scroll(function () {
 		// Infinite scroll -- when reach bottom, request more messages and append them to "left"
-		var height = $(this).scrollHeight - $(this).height(); // Get the height of the div
-		var scroll = $(this).scrollTop(); // Get the vertical scroll position
-		var isScrolledToEnd = (scroll >= height);
-		$(".scroll-pos").text(scroll);
-		$(".scroll-height").text(height);
+		/*  +------------------------+  --+---------+
+     *  |                        |    |         |  scrollTop
+		 *  |------------------------+  --|----+----V
+		 *  |                        |    |    |  clientHeight
+		 *  |------------------------+  --|----V
+		 *  |                        |    | scrollHeight
+		 *  +------------------------+  --V
+		 */
+		var remainingHeight = this.scrollHeight - ( this.scrollTop + this.clientHeight );
+		var isScrolledToEnd = remainingHeight <= 30;
 		if (isScrolledToEnd) {
-			console.log("hit end of messages, getting more");
 			//extend current list of message
-			var json = { phrase_list: searched, limit: 50 };
-			post("messages_with_phrase_list", json, searchPhraseCallback);
+			var json = { phrase_list: searched, limit: 20, offset: offset };
+			console.log("Hit end of messages. Requesting "+json.limit+" more, starting from "+json.offset);
+			post("messages_with_phrase_list", json, searchPhraseCallback); // ((offset is updated in here))
 		}
-	});	
+	});
 }
 
 //appends to current list of messages the new ones we received
 function searchPhraseCallback(err,data){
 	if (!data) {
+		console.log(err);
 		return;
 	}
-	for (var i=0; i<data.messages.length;i++) {		
-		var sentiment = data.messages[i].sentiment;
-		var text = data.messages[i].post;
+
+	var m = data.messages;
+	offset += m.length;
+
+	for (var i=0; i<m.length; i++) {
+		var curr = m[i];
+
+		var sentiment = curr.sentiment;
+		var text = curr.post;
 		var res = text;
 		// now highlights all the terms that we have searched for!
 		for (var j=0; j<searched.length; j++){
 			var regex = new RegExp("(" + searched[j].trim() + ")", "gim");
 			res = res.replace(regex, '<span class = "highlight">$1</span>');
 		}
-		var line = data.messages[i].user_id + ": " + res;
-		
+		var line = curr.user_id + ": " + res;
+
 		var textContainer = document.createElement('div');
-		console.log(sentiment);
-		
+		//console.log(sentiment);
+
 		if(sentiment > 0.2)
 			$(textContainer).addClass("messageContainerPositive")
 				.html(line)
@@ -62,8 +77,8 @@ function clearMessagePanel() {
 
 //this gets called when the searched phrase has changed
 function updateMessagesPanel(phraseList) {
-	var json = { phrase_list: phraseList, limit : 50};
+	offset = 0;
+	var json = { phrase_list: phraseList, limit : 20};
 	clearMessagePanel();
 	post("messages_with_phrase_list", json, searchPhraseCallback);
 }
-
