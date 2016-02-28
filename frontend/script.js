@@ -35,8 +35,11 @@ function resetSearchBar() {
 function removeTopicCallback(elem) {
 	console.log("removing: ");
 	console.log(elem);
-	var text = elem.parentElement.getElementsByClassName("searched-topic-text")[0].innerHTML;
-	searched.pop(searched.indexOf(text));
+	var parent = elem.parentElement;
+	var text = parent.getElementsByClassName("searched-topic-text")[0].innerHTML;
+	console.log(text);
+	searched.splice(searched.indexOf(text),1);
+	parent.parentElement.removeChild(parent);
 	onSearchChanged();
 }
 
