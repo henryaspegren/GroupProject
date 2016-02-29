@@ -3,7 +3,7 @@ var offset = 0;
 function setupMessagePanel() {
 	offset = 0;
 	$("#right").scroll(function () {
-		// Infinite scroll -- when reach bottom, request more messages and append them to "left"
+		// Infinite scroll -- when reach bottom, request more messages and append them to "right"
 		/*  +------------------------+  --+---------+
      *  |                        |    |         |  scrollTop
 		 *  |------------------------+  --|----+----V
@@ -44,9 +44,12 @@ function searchPhraseCallback(err,data){
 			var regex = new RegExp("(" + searched[j].trim() + ")", "gim");
 			res = res.replace(regex, '<span class = "highlight">$1</span>');
 		}
-		var line = curr.user_id + ": " + res;
-
+		//var line = curr.user_id + ": " + res;
+		var line = res;
+		var user = curr.user_id;
+		
 		var textContainer = document.createElement('div');
+		textContainer.setAttribute('title', user);
 		//console.log(sentiment);
 
 		if(sentiment > 0.2)
@@ -78,7 +81,7 @@ function clearMessagePanel() {
 //this gets called when the searched phrase has changed
 function updateMessagesPanel(phraseList) {
 	offset = 0;
-	var json = { phrase_list: phraseList, limit : 20};
+	var json = { phrase_list: phraseList, limit : 20, offset:0};
 	clearMessagePanel();
 	post("messages_with_phrase_list", json, searchPhraseCallback);
 }
