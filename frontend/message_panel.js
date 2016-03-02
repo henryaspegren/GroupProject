@@ -25,6 +25,7 @@ function setupMessagePanel() {
 
 //appends to current list of messages the new ones we received
 function searchPhraseCallback(err,data){
+	console.log(data);
 	if (!data) {
 		console.log(err);
 		return;
@@ -41,6 +42,9 @@ function searchPhraseCallback(err,data){
 		var res = text;
 		// now highlights all the terms that we have searched for!
 		for (var j=0; j<searched.length; j++){
+			if (searched[j].trim().length == 0) {
+				continue;
+			}
 			var regex = new RegExp("(" + searched[j].trim() + ")", "gim");
 			res = res.replace(regex, '<span class = "highlight">$1</span>');
 		}
